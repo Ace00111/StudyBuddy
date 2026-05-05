@@ -8,7 +8,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const wallets = [new PetraWallet()];
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <AptosWalletAdapterProvider plugins={wallets} autoConnect={false}>
         {children}
       </AptosWalletAdapterProvider>

@@ -2,11 +2,12 @@ export type Material = {
   id: string
   name: string
   type: "file" | "link"
+  category: "lectures" | "notes" | "assignments" | "links" | "general"
   shelbyId?: string
   url?: string
   createdAt: string
-  size?: number // for the UI mock
-  folder?: string // for the UI mock
+  size?: number
+  folder?: string
 }
 
 export type FolderInfo = {

@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
+/* THEME SYSTEM */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* LIGHT THEME */
+  --background: #f8fafc; /* slate-50 */
+  --foreground: #0f172a; /* slate-900 */
+  --card-bg: #ffffff;
+  --border: #e2e8f0; /* slate-200 */
+  --primary: #2563eb; /* blue-600 */
+  --header-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --muted: #64748b; /* slate-500 */
 }
+
+.dark {
+  /* DARK THEME */
+  --background: #020617; /* slate-950 */
+  --foreground: #f1f5f9; /* slate-100 */
+  --card-bg: #0f172a; /* slate-900 */
+  --border: #1e293b; /* slate-800 */
+  --primary: #3b82f6; /* blue-500 */
+  --header-bg: #020617;
+  --sidebar-bg: #020617;
+  --muted: #94a3b8; /* slate-400 */
+}
+
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card-bg);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-header: var(--header-bg);
+  --color-sidebar: var(--sidebar-bg);
+  --color-muted: var(--muted);
+  --font-sans: "Inter", "Outfit", var(--font-geist-sans), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+
+* {
+  border-color: var(--border);
 }

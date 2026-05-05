@@ -1,23 +1,36 @@
 "use client";
 
-import { MoreHorizontal, Pin, Activity } from "lucide-react";
+import { MoreHorizontal, Pin, Activity, X } from "lucide-react";
 import { Material } from "@/lib/materials";
 
-export default function InfoPane({ materials }: { materials: Material[] }) {
+interface InfoPaneProps {
+  materials: Material[];
+  onClose: () => void;
+}
+
+export default function InfoPane({ materials, onClose }: InfoPaneProps) {
   const fileCount = materials.filter(m => m.type === "file").length;
   const linkCount = materials.filter(m => m.type === "link").length;
   
-  // Fake sizes for demo
-  const docSize = (fileCount * 4.2).toFixed(1);
+  const totalSizeBytes = materials.reduce((acc, m) => acc + (m.size || 0), 0);
+  const totalSizeMb = (totalSizeBytes / (1024 * 1024)).toFixed(2);
   const totalFiles = fileCount + linkCount;
 
   return (
-    <div className="w-80 h-screen border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col pt-6 px-6 pb-4">
+    <div className="w-80 h-screen border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col pt-6 px-6 pb-4 relative">
       <div className="flex items-center justify-between mb-8">
         <h2 className="font-semibold text-lg">Info</h2>
-        <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-          <MoreHorizontal className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+            <MoreHorizontal className="w-5 h-5" />
+          </button>
+          <button 
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4 mb-8">
@@ -26,9 +39,9 @@ export default function InfoPane({ materials }: { materials: Material[] }) {
             <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Documents</span>
             <MoreHorizontal className="w-4 h-4 text-slate-400" />
           </div>
-          <div className="text-2xl font-bold mb-3">{docSize} MB</div>
+          <div className="text-2xl font-bold mb-3">{totalSizeMb} MB</div>
           <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
-            <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: "45%" }}></div>
+            <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: totalSizeMb === "0.00" ? "0%" : "45%" }}></div>
           </div>
         </div>
 

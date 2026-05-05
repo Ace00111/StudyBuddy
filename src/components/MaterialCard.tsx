@@ -1,7 +1,7 @@
 "use client";
 
 import { Material } from "@/lib/materials";
-import { File, Link as LinkIcon } from "lucide-react";
+import { File, Link as LinkIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MaterialCardProps {
@@ -17,10 +17,10 @@ export default function MaterialCard({ material, onClick, isActive }: MaterialCa
     <div 
       onClick={onClick}
       className={cn(
-        "cursor-pointer rounded-2xl p-5 border transition-all duration-200 group flex flex-col h-40",
+        "cursor-pointer rounded-2xl p-5 border transition-all duration-200 group flex flex-col h-40 relative",
         isActive 
-          ? "bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-500/20" 
-          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:shadow-md text-slate-900 dark:text-slate-100"
+          ? "bg-primary border-primary text-white shadow-lg shadow-blue-500/20" 
+          : "bg-card border-border hover:shadow-md text-foreground"
       )}
     >
       <div className="flex justify-between items-start mb-auto">
@@ -30,6 +30,15 @@ export default function MaterialCard({ material, onClick, isActive }: MaterialCa
         )}>
           {isFile ? <File className="w-5 h-5" /> : <LinkIcon className="w-5 h-5" />}
         </div>
+        {!isActive && (
+           <button 
+             onClick={(e) => { e.stopPropagation(); (window as any).deleteMaterial?.(material.id); }}
+             className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+             title="Delete"
+           >
+             <X className="w-4 h-4" />
+           </button>
+        )}
       </div>
       
       <div>
