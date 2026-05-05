@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Study Buddy
 
-## Getting Started
+## 1. Project Description
+Phase 1: A decentralized storage system using the Shelby Protocol. 
+This application allows students to upload and retrieve study materials (files) securely using their Petra wallet for identity. It features a modern, dark-mode compatible UI for managing your study notes, lectures, and web links.
 
-First, run the development server:
+## 2. Installation
 
 ```bash
+git clone <repo-url>
+cd study-buddy
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 3. Requirements
+- Node.js (latest LTS recommended)
+- npm or yarn
+- Petra Wallet extension installed
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 4. How It Works
+- **Storage:** Files are uploaded to the Shelby Protocol network.
+- **Links:** External web links are stored locally in the application state.
+- **Identity:** The Petra wallet is used for ownership identity and authentication.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 5. Git Setup Instructions
+```bash
+git init
+git add .
+git commit -m "initial phase 1 build"
+git branch -M main
+git remote add origin <repo-url>
+git push -u origin main
+```
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 6. Notes
+- Shelby API endpoints may need adjustment based on official docs (currently using placeholders).
+- This is Phase 1 (storage layer only).
+- AI + learning system comes later.
