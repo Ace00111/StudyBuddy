@@ -1,9 +1,8 @@
 "use client";
 
-import { X, Search, FileText, Activity, Zap, Plus, Music, Video, Image as ImageIcon, Box, Globe, Shield, Book, Library, FileCheck } from "lucide-react";
+import { X, Search, FileText, Activity, Zap, Music, Video, Image as ImageIcon, Box, Shield } from "lucide-react";
 import { Material } from "@/lib/materials";
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
 
 interface InfoPaneProps {
   materials: Material[];
@@ -18,21 +17,6 @@ export default function InfoPane({ materials, notesCount, onClose }: InfoPanePro
   const totalSizeBytes = materials.reduce((acc, m) => acc + (m.size || 0), 0);
   const totalSizeMb = (totalSizeBytes / (1024 * 1024)).toFixed(2);
 
-  const getTypeSize = (regex: RegExp) => {
-    const bytes = materials
-      .filter(m => regex.test(m.name))
-      .reduce((acc, m) => acc + (m.size || 0), 0);
-    return (bytes / (1024 * 1024)).toFixed(2);
-  };
-
-  const pdfSize = getTypeSize(/\.pdf$/i);
-  const audioSize = getTypeSize(/\.(mp3|wav|m4a)$/i);
-  const videoSize = getTypeSize(/\.(mp4|mov|avi)$/i);
-  const imageSize = getTypeSize(/\.(png|jpg|jpeg|gif|svg)$/i);
-  const othersSize = (parseFloat(totalSizeMb) - (parseFloat(pdfSize) + parseFloat(audioSize) + parseFloat(videoSize) + parseFloat(imageSize))).toFixed(2);
-
-  const CAPACITY_MB = 100;
-  const capacityPercentage = Math.min(100, (parseFloat(totalSizeMb) / CAPACITY_MB) * 100);
 
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -116,34 +100,47 @@ export default function InfoPane({ materials, notesCount, onClose }: InfoPanePro
               </div>
            </div>
 
-           <div className="p-6 bg-slate-50 dark:bg-slate-900 border border-border rounded-[32px]">
-              <div className="flex justify-between items-center mb-2">
-                 <p className="text-[9px] font-black uppercase tracking-widest text-muted">Library Capacity</p>
-                 <span className="text-[10px] font-black text-primary">{totalSizeMb} / {CAPACITY_MB} MB</span>
+
+           {/* Quick Stats — per-type breakdown */}
+           <div className="p-5 bg-slate-50 dark:bg-slate-900 border border-border rounded-[32px] space-y-3">
+              <p className="text-[9px] font-black uppercase tracking-widest text-muted mb-3">Quick Stats</p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: "PDFs", value: materials.filter(m => m.name.toLowerCase().endsWith(".pdf")).length, color: "text-blue-500", bg: "bg-blue-500/10" },
+                  { label: "Audio", value: materials.filter(m => /\.(mp3|wav|m4a)$/i.test(m.name)).length, color: "text-pink-500", bg: "bg-pink-500/10" },
+                  { label: "Videos", value: materials.filter(m => /\.(mp4|mov|avi)$/i.test(m.name)).length, color: "text-purple-500", bg: "bg-purple-500/10" },
+                  { label: "Images", value: materials.filter(m => /\.(png|jpg|jpeg|gif|svg)$/i.test(m.name)).length, color: "text-yellow-500", bg: "bg-yellow-500/10" },
+                ].map((stat) => (
+                  <div key={stat.label} className={`p-3 rounded-2xl ${stat.bg} flex flex-col gap-1`}>
+                    <span className={`text-xl font-black tracking-tighter ${stat.color}`}>{stat.value}</span>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-muted">{stat.label}</span>
+                  </div>
+                ))}
               </div>
-              <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                 <motion.div 
-                   initial={{ width: 0 }}
-                   animate={{ width: `${capacityPercentage}%` }}
-                   transition={{ duration: 1, ease: "easeOut" }}
-                   className="h-full bg-primary rounded-full shadow-[0_0_12px_rgba(59,130,246,0.6)]" 
-                 />
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[8px] font-black uppercase tracking-widest text-muted">Links saved</span>
+                <span className="text-[10px] font-black text-foreground">{materials.filter(m => m.type === "link").length}</span>
               </div>
-              <p className="text-[8px] font-black text-muted mt-2 uppercase tracking-widest">
-                {100 - Math.round(capacityPercentage)}% Space Remaining
-              </p>
            </div>
         </div>
 
         {/* Breakdown */}
         <div className="space-y-5">
-          <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted">Categories</h3>
+          <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted">File Breakdown</h3>
           <div className="space-y-4">
-            <BreakdownItem icon={<FileText className="w-3 h-3" />} label="Notes" value={pdfSize} color="bg-blue-500" total={totalSizeMb} />
-            <BreakdownItem icon={<Music className="w-3 h-3" />} label="Audio" value={audioSize} color="bg-pink-500" total={totalSizeMb} />
-            <BreakdownItem icon={<Video className="w-3 h-3" />} label="Videos" value={videoSize} color="bg-purple-500" total={totalSizeMb} />
-            <BreakdownItem icon={<ImageIcon className="w-3 h-3" />} label="Captures" value={imageSize} color="bg-yellow-500" total={totalSizeMb} />
-            <BreakdownItem icon={<Box className="w-3 h-3" />} label="Other" value={othersSize} color="bg-slate-500" total={totalSizeMb} />
+            {(() => {
+              const counts = [
+                { icon: <FileText className="w-3 h-3" />, label: "PDFs", count: materials.filter(m => m.name.toLowerCase().endsWith(".pdf")).length, color: "bg-blue-500" },
+                { icon: <Music className="w-3 h-3" />, label: "Audio", count: materials.filter(m => /\.(mp3|wav|m4a)$/i.test(m.name)).length, color: "bg-pink-500" },
+                { icon: <Video className="w-3 h-3" />, label: "Videos", count: materials.filter(m => /\.(mp4|mov|avi)$/i.test(m.name)).length, color: "bg-purple-500" },
+                { icon: <ImageIcon className="w-3 h-3" />, label: "Images", count: materials.filter(m => /\.(png|jpg|jpeg|gif|svg)$/i.test(m.name)).length, color: "bg-yellow-500" },
+                { icon: <Box className="w-3 h-3" />, label: "Other", count: materials.filter(m => m.type === "file" && !/\.(pdf|mp3|wav|m4a|mp4|mov|avi|png|jpg|jpeg|gif|svg)$/i.test(m.name)).length, color: "bg-slate-500" },
+              ];
+              const maxCount = Math.max(1, ...counts.map(c => c.count));
+              return counts.map(item => (
+                <BreakdownItem key={item.label} icon={item.icon} label={item.label} count={item.count} maxCount={maxCount} color={item.color} />
+              ));
+            })()}
           </div>
         </div>
 
@@ -167,7 +164,7 @@ export default function InfoPane({ materials, notesCount, onClose }: InfoPanePro
             <Zap className={`w-3 h-3 text-primary ${isSyncing ? 'animate-bounce' : 'animate-pulse'}`} />
           </button>
           <p className="text-[8px] font-bold text-muted text-center px-4 leading-relaxed">
-            Note: This will trigger a wallet signature request to verify your decentralized storage hash.
+            This triggers a wallet signature to verify your decentralized storage hash on-chain.
           </p>
         </div>
       </div>
@@ -175,8 +172,8 @@ export default function InfoPane({ materials, notesCount, onClose }: InfoPanePro
   );
 }
 
-function BreakdownItem({ icon, label, value, color, total }: { icon: any, label: string, value: string, color: string, total: string }) {
-  const percentage = Math.min(100, (parseFloat(value) / Math.max(1, parseFloat(total))) * 100);
+function BreakdownItem({ icon, label, count, maxCount, color }: { icon: any, label: string, count: number, maxCount: number, color: string }) {
+  const percentage = Math.min(100, (count / maxCount) * 100);
   return (
     <div className="space-y-1.5">
       <div className="flex justify-between items-center text-[10px] font-black">
@@ -184,11 +181,12 @@ function BreakdownItem({ icon, label, value, color, total }: { icon: any, label:
           <div className={`p-1 rounded-md ${color} bg-opacity-10 text-current`}>{icon}</div>
           {label}
         </div>
-        <span className="text-muted">{value} MB</span>
+        <span className="text-muted">{count} files</span>
       </div>
       <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1 overflow-hidden">
-        <div className={`${color} h-full rounded-full transition-all duration-1000`} style={{ width: `${percentage}%` }}></div>
+        <div className={`${color} h-full rounded-full transition-all duration-700`} style={{ width: `${percentage}%` }}></div>
       </div>
     </div>
   );
 }
+

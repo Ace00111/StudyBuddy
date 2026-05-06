@@ -1,9 +1,10 @@
 "use client";
 
-import { User, Bell, Shield, Wallet, Laptop, Moon, Sun, Camera, Check, X, Edit3, ExternalLink, Globe, Database, EyeOff, Lock, Ghost, ShieldAlert } from "lucide-react";
+import { User, Bell, Camera, X, ExternalLink, Globe, EyeOff, Lock, Ghost, ShieldAlert, Wallet, ShieldCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient } from "aptos";
+import { loadWalletProfile, saveWalletProfile, loadWalletSettings, saveWalletSettings } from "@/lib/walletStorage";
 
 const NODE_URL = "https://fullnode.mainnet.aptoslabs.com";
 const client = new AptosClient(NODE_URL);
@@ -27,24 +28,25 @@ export default function SettingsView() {
     privacy: { stealthMode: false, encryptedPreviews: true, hideActivity: false, incognitoSync: false }
   });
 
-  // Load from localStorage & Handle Dummy Logic
+  // Load from wallet-scoped localStorage
   useEffect(() => {
-    if (!connected) {
+    const walletAddress = account?.address?.toString() ?? null;
+
+    if (!connected || !walletAddress) {
       const dummy = { name: "Guest Scholar", email: "guest@studybuddy.io", avatar: "" };
       setProfile(dummy);
       setTempProfile(dummy);
       return;
     }
 
-    const savedProfile = localStorage.getItem('studybuddy_profile');
+    const savedProfile = loadWalletProfile(walletAddress);
     if (savedProfile) {
-      const p = JSON.parse(savedProfile);
-      setProfile(p);
-      setTempProfile(p);
+      setProfile(savedProfile);
+      setTempProfile(savedProfile);
     }
-    const savedSettings = localStorage.getItem('studybuddy_settings');
-    if (savedSettings) setToggles(JSON.parse(savedSettings));
-  }, [connected]);
+    const savedSettings = loadWalletSettings(walletAddress);
+    if (savedSettings) setToggles(savedSettings);
+  }, [connected, account?.address]);
 
   // Fetch Balance
   useEffect(() => {
@@ -65,24 +67,10 @@ export default function SettingsView() {
     fetchBalance();
   }, [connected, account]);
 
-  const handleSave = async () => {
+  const handleSave = () => {
+    const walletAddress = account?.address?.toString() ?? null;
     setProfile(tempProfile);
-    localStorage.setItem('studybuddy_profile', JSON.stringify(tempProfile));
-    
-    // Sync with database
-    try {
-      const response = await fetch('/api/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: tempProfile.email, name: tempProfile.name }),
-      });
-      if (response.ok) {
-        console.log("Profile synchronized with database.");
-      }
-    } catch (e) {
-      console.error("Database sync failed:", e);
-    }
-
+    saveWalletProfile(walletAddress, tempProfile);
     setIsEditing(false);
     window.dispatchEvent(new Event('studybuddy_profile_updated'));
   };
@@ -99,6 +87,7 @@ export default function SettingsView() {
   };
 
   const handleToggle = (section: keyof typeof toggles, key: string) => {
+    const walletAddress = account?.address?.toString() ?? null;
     const newToggles = {
       ...toggles,
       [section]: {
@@ -107,7 +96,7 @@ export default function SettingsView() {
       }
     };
     setToggles(newToggles);
-    localStorage.setItem('studybuddy_settings', JSON.stringify(newToggles));
+    saveWalletSettings(walletAddress, newToggles);
     window.dispatchEvent(new Event('studybuddy_settings_updated'));
   };
 
@@ -210,19 +199,6 @@ export default function SettingsView() {
                                </div>
                              )}
                              {!tempProfile.avatar && <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer z-20" />}
-                          </div>
-                          
-                          <div className="mt-4 p-5 bg-primary/5 border border-primary/10 rounded-[32px] flex items-center justify-between">
-                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                   <ShieldCheck className="w-4 h-4" />
-                                </div>
-                                <div>
-                                   <p className="text-[10px] font-black uppercase tracking-widest text-primary leading-none mb-1">Identity Sync</p>
-                                   <p className="text-[9px] font-bold text-muted leading-none">Ready for on-chain verification</p>
-                                </div>
-                             </div>
-                             <button className="px-4 py-2 bg-primary text-white rounded-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all">Sync Now</button>
                           </div>
                        </div>
                        <div className="flex gap-4 pt-6">
