@@ -1,16 +1,20 @@
 "use client";
 
-import { User, Bell, Shield, Wallet, Laptop, Moon, Sun, Camera, Check, X } from "lucide-react";
-import { useTheme } from "next-themes";
-import { useState } from "react";
+import { User, Bell, Shield, Wallet, Laptop, Moon, Sun, Camera, Check, X, Edit3, ExternalLink, Globe, Database, EyeOff, Lock, Ghost, ShieldAlert } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { AptosClient } from "aptos";
+
+const NODE_URL = "https://fullnode.mainnet.aptoslabs.com";
+const client = new AptosClient(NODE_URL);
 
 export default function SettingsView() {
   const { account, connected } = useWallet();
   const [activeSection, setActiveSection] = useState("Profile");
   const [isEditing, setIsEditing] = useState(false);
+  const [balance, setBalance] = useState<string>("0.00");
   
-  // Persistence Mock (using state as primary, could use useEffect to load/save)
+  // Persistent Profile
   const [profile, setProfile] = useState({
     name: "Scholar User",
     email: "scholar@studybuddy.io",
@@ -19,36 +23,68 @@ export default function SettingsView() {
   const [tempProfile, setTempProfile] = useState({ ...profile });
 
   const [toggles, setToggles] = useState({
-    notifications: {
-      email: true,
-      push: false,
-      updates: true
-    },
-    security: {
-      twoFactor: false,
-      biometric: true,
-      stealthMode: false
-    },
-    protocol: {
-      autoSync: true,
-      peerDiscovery: false
-    }
+    notifications: { email: true, push: false },
+    privacy: { stealthMode: false, encryptedPreviews: true, hideActivity: false, incognitoSync: false }
   });
 
-  const handleSave = () => {
-    setProfile(tempProfile);
-    setIsEditing(false);
-    // In a real app, you'd save to a backend or localStorage here
-  };
+  // Load from localStorage & Handle Dummy Logic
+  useEffect(() => {
+    if (!connected) {
+      const dummy = { name: "Guest Scholar", email: "guest@studybuddy.io", avatar: "" };
+      setProfile(dummy);
+      setTempProfile(dummy);
+      return;
+    }
 
-  const handleToggle = (section: keyof typeof toggles, key: string) => {
-    setToggles({
-      ...toggles,
-      [section]: {
-        ...toggles[section as keyof typeof toggles],
-        [key]: !(toggles[section as keyof typeof toggles] as any)[key]
+    const savedProfile = localStorage.getItem('studybuddy_profile');
+    if (savedProfile) {
+      const p = JSON.parse(savedProfile);
+      setProfile(p);
+      setTempProfile(p);
+    }
+    const savedSettings = localStorage.getItem('studybuddy_settings');
+    if (savedSettings) setToggles(JSON.parse(savedSettings));
+  }, [connected]);
+
+  // Fetch Balance
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (connected && account?.address) {
+        try {
+          const resources: any[] = await client.getAccountResources(account.address);
+          const accountResource = resources.find((r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>");
+          if (accountResource) {
+            const amount = accountResource.data.coin.value;
+            setBalance((parseInt(amount) / 100_000_000).toFixed(2));
+          }
+        } catch (e) {
+          console.error("Balance fetch error:", e);
+        }
       }
-    });
+    };
+    fetchBalance();
+  }, [connected, account]);
+
+  const handleSave = async () => {
+    setProfile(tempProfile);
+    localStorage.setItem('studybuddy_profile', JSON.stringify(tempProfile));
+    
+    // Sync with database
+    try {
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: tempProfile.email, name: tempProfile.name }),
+      });
+      if (response.ok) {
+        console.log("Profile synchronized with database.");
+      }
+    } catch (e) {
+      console.error("Database sync failed:", e);
+    }
+
+    setIsEditing(false);
+    window.dispatchEvent(new Event('studybuddy_profile_updated'));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,32 +98,45 @@ export default function SettingsView() {
     }
   };
 
+  const handleToggle = (section: keyof typeof toggles, key: string) => {
+    const newToggles = {
+      ...toggles,
+      [section]: {
+        ...toggles[section as keyof typeof toggles],
+        [key]: !(toggles[section as keyof typeof toggles] as any)[key]
+      }
+    };
+    setToggles(newToggles);
+    localStorage.setItem('studybuddy_settings', JSON.stringify(newToggles));
+    window.dispatchEvent(new Event('studybuddy_settings_updated'));
+  };
+
   return (
-    <div className="flex-1 flex flex-col h-full bg-background transition-colors">
-      <div className="px-8 pt-8 pb-4">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Settings</h1>
-        <p className="text-muted text-sm">Manage your account and protocol preferences.</p>
+    <div className="flex-1 flex flex-col h-full bg-slate-50 dark:bg-slate-950 transition-colors">
+      <div className="px-8 pt-8 pb-4 max-w-6xl mx-auto w-full">
+        <h1 className="text-4xl font-black tracking-tighter mb-2">Settings</h1>
+        <p className="text-muted text-sm font-medium">Manage your scholar profile and secure storage preferences.</p>
       </div>
 
-      <div className="px-8 pb-8 max-w-5xl">
-        <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-xl">
-          <div className="grid grid-cols-1 md:grid-cols-4 min-h-[600px]">
-            {/* Sidebar menu inside settings */}
-            <div className="p-4 border-r border-border bg-sidebar/30">
-              <nav className="space-y-1">
+      <div className="px-8 pb-8 max-w-6xl mx-auto w-full">
+        <div className="bg-white dark:bg-slate-900 border border-border rounded-[48px] overflow-hidden shadow-2xl">
+          <div className="grid grid-cols-1 md:grid-cols-4 min-h-[650px]">
+            {/* Sidebar menu */}
+            <div className="p-6 border-r border-border bg-slate-50/50 dark:bg-slate-900/50">
+              <nav className="space-y-2">
                 {[
                   { icon: User, label: "Profile" },
-                  { icon: Bell, label: "Notifications" },
-                  { icon: Shield, label: "Security" },
                   { icon: Wallet, label: "Wallet" },
+                  { icon: Lock, label: "Privacy" },
+                  { icon: Bell, label: "Notifications" },
                 ].map((item) => (
                   <button
                     key={item.label}
                     onClick={() => setActiveSection(item.label)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
+                    className={`w-full flex items-center gap-3 px-5 py-4 rounded-[24px] text-sm font-black transition-all ${
                       activeSection === item.label
-                        ? "bg-primary text-white shadow-lg shadow-primary/20"
-                        : "text-muted hover:bg-slate-800 hover:text-white"
+                        ? "bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]"
+                        : "text-muted hover:bg-slate-100 dark:hover:bg-slate-800"
                     }`}
                   >
                     <item.icon className="w-4 h-4" />
@@ -98,120 +147,160 @@ export default function SettingsView() {
             </div>
 
             {/* Content area */}
-            <div className="col-span-3 p-10 overflow-y-auto">
+            <div className="col-span-3 p-12 overflow-y-auto custom-scrollbar">
               
               {/* Profile Section */}
               {activeSection === "Profile" && (
                 <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                  <h3 className="text-xl font-bold mb-8">Account Profile</h3>
+                  <div className="flex justify-between items-start mb-10">
+                    <h3 className="text-2xl font-black tracking-tight text-foreground">Scholar Profile</h3>
+                    {connected && !isEditing && (
+                      <button 
+                        onClick={() => setIsEditing(true)}
+                        className="px-5 py-2.5 bg-primary/10 text-primary rounded-xl text-[10px] font-black uppercase tracking-widest border border-primary/20 hover:bg-primary hover:text-white transition-all"
+                      >
+                        Edit Profile
+                      </button>
+                    )}
+                  </div>
                   
                   {isEditing ? (
                     <div className="space-y-8">
-                      <div className="flex items-center gap-8">
-                        <div className="relative group">
-                          <div className="w-24 h-24 rounded-3xl bg-slate-800 flex items-center justify-center overflow-hidden border-2 border-dashed border-slate-700 group-hover:border-primary transition-colors">
-                            {tempProfile.avatar ? (
-                              <img src={tempProfile.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                            ) : (
-                              <Camera className="w-10 h-10 text-slate-500 group-hover:text-primary" />
-                            )}
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div className="space-y-6">
+                            <div>
+                              <label className="text-[10px] font-black uppercase tracking-widest text-muted mb-2 block">Full Name</label>
+                              <input 
+                                type="text" 
+                                className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-transparent focus:border-primary outline-none font-bold"
+                                value={tempProfile.name}
+                                onChange={(e) => setTempProfile({ ...tempProfile, name: e.target.value })}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-black uppercase tracking-widest text-muted mb-2 block">Email Address</label>
+                              <input 
+                                type="email" 
+                                className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-transparent focus:border-primary outline-none"
+                                value={tempProfile.email}
+                                onChange={(e) => setTempProfile({ ...tempProfile, email: e.target.value })}
+                              />
+                            </div>
                           </div>
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="absolute inset-0 opacity-0 cursor-pointer" 
-                            onChange={handleImageChange}
-                          />
-                        </div>
-                        <div className="flex-1 space-y-4">
-                          <div>
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-muted mb-1 block">Full Name</label>
-                            <input 
-                              type="text" 
-                              className="w-full px-5 py-3 bg-slate-800/50 rounded-2xl border border-border focus:ring-2 focus:ring-primary outline-none font-bold"
-                              value={tempProfile.name}
-                              onChange={(e) => setTempProfile({ ...tempProfile, name: e.target.value })}
-                            />
+                          <div className="flex flex-col items-center justify-center p-8 bg-slate-50 dark:bg-slate-800 rounded-[40px] border border-dashed border-border group relative overflow-hidden transition-all hover:border-primary/50">
+                             {tempProfile.avatar ? (
+                               <div className="absolute inset-0 w-full h-full">
+                                  <img src={tempProfile.avatar} alt="Avatar" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
+                                     <button 
+                                       onClick={() => setTempProfile({ ...tempProfile, avatar: "" })}
+                                       className="p-3 bg-red-500 text-white rounded-2xl hover:scale-110 transition-transform shadow-xl"
+                                     >
+                                        <X className="w-5 h-5" />
+                                     </button>
+                                     <span className="text-[10px] font-black uppercase tracking-widest text-white">Remove Photo</span>
+                                  </div>
+                               </div>
+                             ) : (
+                               <div className="relative z-10 flex flex-col items-center">
+                                  <div className="w-20 h-20 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-primary mb-4 border-2 border-primary/30 shadow-xl group-hover:scale-110 transition-all">
+                                     <Camera className="w-8 h-8" />
+                                  </div>
+                                  <span className="px-4 py-1.5 bg-primary text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">Upload Photo</span>
+                               </div>
+                             )}
+                             {!tempProfile.avatar && <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer z-20" />}
                           </div>
-                          <div>
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-muted mb-1 block">Email Address</label>
-                            <input 
-                              type="email" 
-                              className="w-full px-5 py-3 bg-slate-800/50 rounded-2xl border border-border focus:ring-2 focus:ring-primary outline-none"
-                              value={tempProfile.email}
-                              onChange={(e) => setTempProfile({ ...tempProfile, email: e.target.value })}
-                            />
+                          
+                          <div className="mt-4 p-5 bg-primary/5 border border-primary/10 rounded-[32px] flex items-center justify-between">
+                             <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                   <ShieldCheck className="w-4 h-4" />
+                                </div>
+                                <div>
+                                   <p className="text-[10px] font-black uppercase tracking-widest text-primary leading-none mb-1">Identity Sync</p>
+                                   <p className="text-[9px] font-bold text-muted leading-none">Ready for on-chain verification</p>
+                                </div>
+                             </div>
+                             <button className="px-4 py-2 bg-primary text-white rounded-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all">Sync Now</button>
                           </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-3 pt-4">
-                        <button 
-                          onClick={handleSave}
-                          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all"
-                        >
-                          <Check className="w-4 h-4" /> Save Changes
-                        </button>
-                        <button 
-                          onClick={() => { setIsEditing(false); setTempProfile({ ...profile }); }}
-                          className="px-6 py-3 bg-slate-800 text-slate-300 rounded-2xl text-sm font-bold hover:bg-slate-700 transition-all"
-                        >
-                          Cancel
-                        </button>
-                      </div>
+                       </div>
+                       <div className="flex gap-4 pt-6">
+                        <button onClick={handleSave} className="px-8 py-4 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20">Save Changes</button>
+                        <button onClick={() => { setIsEditing(false); setTempProfile({...profile}); }} className="px-8 py-4 bg-slate-100 dark:bg-slate-800 text-muted rounded-2xl text-[10px] font-black uppercase tracking-widest">Cancel</button>
+                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-8 p-8 rounded-[40px] bg-slate-800/30 border border-border/50">
-                      <div className="w-24 h-24 rounded-3xl bg-primary flex items-center justify-center text-3xl font-black text-white shadow-2xl shadow-primary/30 overflow-hidden border-4 border-slate-900">
-                        {profile.avatar ? (
-                          <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                        ) : (
-                          profile.name.charAt(0)
-                        )}
+                    <div className="flex items-center gap-10 p-10 rounded-[48px] bg-slate-50/50 dark:bg-slate-800/30 border border-border">
+                      <div className="w-28 h-28 rounded-[36px] bg-primary flex items-center justify-center text-4xl font-black text-white shadow-2xl shadow-primary/30 overflow-hidden">
+                        {profile.avatar ? <img src={profile.avatar} className="w-full h-full object-cover" /> : profile.name.charAt(0)}
                       </div>
-                      <div>
-                        <p className="font-black text-2xl tracking-tight">{profile.name}</p>
-                        <p className="text-muted font-medium">{profile.email}</p>
-                        <div className="flex gap-2 mt-4">
-                          <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[10px] font-black uppercase rounded-lg border border-green-500/20">Verified Account</span>
-                          <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-black uppercase rounded-lg border border-primary/20">Beta Scholar</span>
+                      <div className="flex-1">
+                        <p className="font-black text-3xl tracking-tighter text-foreground">{profile.name}</p>
+                        <p className="text-muted font-bold mt-1">{profile.email}</p>
+                        <div className="flex gap-2 mt-6">
+                          <span className="px-4 py-1.5 bg-green-500/10 text-green-500 text-[9px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Verified Identity</span>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => setIsEditing(true)}
-                        className="ml-auto p-4 bg-slate-900 border border-border rounded-2xl hover:bg-slate-800 transition-all shadow-xl"
-                        title="Edit Profile"
-                      >
-                        <Edit3 className="w-5 h-5 text-primary" />
-                      </button>
+                      {!connected && (
+                        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[10px] font-bold text-amber-600 max-w-[150px] text-center">
+                          Connect wallet to edit profile
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Notifications Section */}
-              {activeSection === "Notifications" && (
+              {/* Wallet Section */}
+              {activeSection === "Wallet" && (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-10">
+                  <h3 className="text-2xl font-black tracking-tight text-foreground">Wallet</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div className="p-10 rounded-[48px] bg-[#0a0c14] text-white shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 rounded-full -mr-20 -mt-20 blur-3xl" />
+                        <div className="flex justify-between items-start mb-12">
+                           <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center"><Wallet className="w-7 h-7 text-primary" /></div>
+                           <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Aptos Mainnet</span>
+                        </div>
+                        <p className="text-5xl font-black tracking-tighter mb-2">{connected ? balance : "0.00"} APT</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Actual Balance</p>
+                     </div>
+
+                     <div className="p-10 rounded-[48px] bg-slate-100 dark:bg-slate-800 border border-border shadow-sm group">
+                        <div className="flex justify-between items-start mb-12">
+                           <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary"><Globe className="w-7 h-7" /></div>
+                           <span className="text-[10px] font-black uppercase tracking-widest text-muted">On-Chain Data</span>
+                        </div>
+                        <h4 className="text-2xl font-black mb-6">Aptos Explorer</h4>
+                        <button onClick={() => window.open(`https://explorer.aptoslabs.com/account/${account?.address}?network=mainnet`, "_blank")} className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-primary hover:underline">
+                           View Transactions <ExternalLink className="w-3 h-3" />
+                        </button>
+                     </div>
+                  </div>
+                </div>
+              )}
+
+               {/* Privacy */}
+              {activeSection === "Privacy" && (
                 <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
-                  <h3 className="text-xl font-bold mb-6">Notification Settings</h3>
+                  <h3 className="text-2xl font-black tracking-tight text-foreground">Privacy Controls</h3>
                   <div className="space-y-4">
                     {[
-                      { key: 'email', label: 'Email Alerts', desc: 'Get updates about your materials in your inbox' },
-                      { key: 'push', label: 'Push Notifications', desc: 'Real-time alerts when classmates interact' },
-                      { key: 'updates', label: 'Protocol Updates', desc: 'Important news about Shelby Protocol changes' },
+                      { key: 'stealthMode', icon: Ghost, label: 'Stealth Mode', desc: 'Blur sensitive titles and data in the UI' },
+                      { key: 'hideActivity', icon: EyeOff, label: 'Hide Activity', desc: 'Do not show your study history on home page' },
+                      { key: 'incognitoSync', icon: ShieldAlert, label: 'Incognito Sync', desc: 'Remove file metadata before on-chain push' },
                     ].map((item) => (
-                      <div key={item.key} className="flex items-center justify-between p-6 rounded-3xl bg-slate-800/20 border border-border/50">
-                        <div>
-                          <p className="font-bold">{item.label}</p>
-                          <p className="text-xs text-muted">{item.desc}</p>
+                      <div key={item.key} className="flex items-center justify-between p-8 rounded-[32px] bg-slate-50/50 dark:bg-slate-800/30 border border-border">
+                        <div className="flex items-center gap-5">
+                           <div className="w-12 h-12 bg-white dark:bg-slate-900 rounded-2xl flex items-center justify-center text-primary shadow-sm"><item.icon className="w-6 h-6" /></div>
+                           <div>
+                              <p className="text-lg font-black tracking-tight">{item.label}</p>
+                              <p className="text-xs text-muted font-medium">{item.desc}</p>
+                           </div>
                         </div>
-                        <button 
-                          onClick={() => handleToggle('notifications', item.key)}
-                          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-                            (toggles.notifications as any)[item.key] ? "bg-primary" : "bg-slate-700"
-                          }`}
-                        >
-                          <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                            (toggles.notifications as any)[item.key] ? "translate-x-6" : "translate-x-1"
-                          }`} />
+                        <button onClick={() => handleToggle('privacy', item.key)} className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all ${ (toggles.privacy as any)[item.key] ? "bg-primary" : "bg-slate-300 dark:bg-slate-700" }`}>
+                          <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${ (toggles.privacy as any)[item.key] ? "translate-x-7" : "translate-x-1" }`} />
                         </button>
                       </div>
                     ))}
@@ -219,82 +308,40 @@ export default function SettingsView() {
                 </div>
               )}
 
-              {/* Security Section */}
-              {activeSection === "Security" && (
-                <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
-                  <h3 className="text-xl font-bold mb-6">Security & Privacy</h3>
+              {/* Notifications */}
+              {activeSection === "Notifications" && (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-10">
+                  <h3 className="text-2xl font-black tracking-tight text-foreground">Notifications</h3>
                   <div className="space-y-4">
-                     <div className="flex items-center justify-between p-6 rounded-3xl bg-slate-800/20 border border-border/50">
-                        <div>
-                          <p className="font-bold">Two-Factor Authentication</p>
-                          <p className="text-xs text-muted">Secure your account with an extra layer of protection</p>
+                    {[
+                      { key: 'email', label: 'Email Reports', desc: 'Weekly summary of your library activity and storage usage' },
+                      { key: 'push', label: 'Push Notifications', desc: 'Real-time desktop alerts for system events' },
+                      { key: 'syncAlerts', label: 'Sync Successful Alerts', desc: 'Notify when files are successfully verified on-chain' },
+                      { key: 'reminders', label: 'Study Reminders', desc: 'Personalized alerts for upcoming lecture reviews' },
+                      { key: 'security', label: 'Library Security Alerts', desc: 'Immediate notification of unauthorized access attempts' },
+                    ].map((item) => (
+                      <div key={item.key} className="flex items-center justify-between p-8 rounded-[32px] bg-slate-50/50 dark:bg-slate-800/30 border border-border hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all">
+                        <div className="flex items-center gap-4">
+                           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                              <Bell className="w-4 h-4" />
+                           </div>
+                           <div>
+                              <p className="text-lg font-black tracking-tight">{item.label}</p>
+                              <p className="text-xs text-muted font-medium">{item.desc}</p>
+                           </div>
                         </div>
                         <button 
-                          onClick={() => handleToggle('security', 'twoFactor')}
-                          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-                            toggles.security.twoFactor ? "bg-primary" : "bg-slate-700"
+                          onClick={() => handleToggle('notifications', item.key)}
+                          className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all ${
+                            (toggles.notifications as any)[item.key] ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"
                           }`}
                         >
-                          <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                            toggles.security.twoFactor ? "translate-x-6" : "translate-x-1"
+                          <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${
+                            (toggles.notifications as any)[item.key] ? "translate-x-7" : "translate-x-1"
                           }`} />
                         </button>
-                     </div>
-                     <div className="flex items-center justify-between p-6 rounded-3xl bg-slate-800/20 border border-border/50">
-                        <div>
-                          <p className="font-bold">Stealth Mode</p>
-                          <p className="text-xs text-muted">Hide your online status and study activity from others</p>
-                        </div>
-                        <button 
-                          onClick={() => handleToggle('security', 'stealthMode')}
-                          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-                            toggles.security.stealthMode ? "bg-primary" : "bg-slate-700"
-                          }`}
-                        >
-                          <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                            toggles.security.stealthMode ? "translate-x-6" : "translate-x-1"
-                          }`} />
-                        </button>
-                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Wallet Section */}
-              {activeSection === "Wallet" && (
-                <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                  <h3 className="text-xl font-bold mb-8">Protocol Wallet</h3>
-                  <div className={`p-8 rounded-[40px] border shadow-2xl ${
-                    connected 
-                      ? "bg-green-500/5 border-green-500/20 shadow-green-500/5" 
-                      : "bg-amber-500/5 border-amber-500/20 shadow-amber-500/5"
-                  }`}>
-                    <div className="flex flex-col items-center text-center space-y-6">
-                      <div className={`w-20 h-20 rounded-full flex items-center justify-center ${
-                        connected ? "bg-green-500/20 text-green-500" : "bg-amber-500/20 text-amber-500"
-                      }`}>
-                        <Wallet className="w-10 h-10" />
                       </div>
-                      <div>
-                        <h4 className="text-2xl font-black">{connected ? "Connected to Aptos" : "Connection Required"}</h4>
-                        <p className="text-muted text-sm mt-2 max-w-sm mx-auto">
-                          {connected 
-                            ? `Your storage node is currently linked to address: ${account?.address}` 
-                            : "Please connect your Aptos wallet via the sidebar to enable decentralized storage features."}
-                        </p>
-                      </div>
-                      {connected && (
-                         <div className="w-full pt-6 border-t border-border/50">
-                            <div className="flex justify-between items-center text-sm mb-2">
-                               <span className="text-muted font-bold">Node Health</span>
-                               <span className="text-green-500 font-black">EXCELLENT</span>
-                            </div>
-                            <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                               <div className="h-full bg-green-500 w-[94%]" />
-                            </div>
-                         </div>
-                      )}
-                    </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -306,4 +353,3 @@ export default function SettingsView() {
     </div>
   );
 }
-

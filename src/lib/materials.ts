@@ -8,6 +8,7 @@ export type Material = {
   createdAt: string
   size?: number
   folder?: string
+  tags?: string[]
 }
 
 export type FolderInfo = {

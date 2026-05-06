@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Search, Folder as FolderIcon } from "lucide-react";
 import UploadBox from "@/components/UploadBox";
 import MaterialCard from "@/components/MaterialCard";
@@ -23,8 +24,8 @@ export default function MaterialsView({
   setActiveMaterial,
   selectedCategory = "all"
 }: MaterialsViewProps) {
+  const [searchQuery, setSearchQuery] = useState("");
   
-  // Expose delete to window for the child cards to call (hacky but effective for deep components)
   useEffect(() => {
     (window as any).deleteMaterial = onDelete;
     return () => { delete (window as any).deleteMaterial; };
@@ -35,29 +36,31 @@ export default function MaterialsView({
     if (m.type === "file" && m.shelbyId) {
       window.open(getShelbyFileUrl(m.shelbyId), "_blank");
     }
-    if (m.type === "link" && m.url) {
-      window.open(m.url, "_blank");
-    }
   };
 
-  const filteredMaterials = selectedCategory === "all" 
-    ? materials 
-    : materials.filter(m => m.category === selectedCategory);
+  const filteredMaterials = materials
+    .filter(m => (selectedCategory === "all" || m.category === selectedCategory))
+    .filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="flex-1 flex flex-col h-full">
-      <div className="px-4 md:px-8 pb-8 pt-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <h1 className="text-3xl font-bold tracking-tight capitalize">
-            {selectedCategory === "all" ? "Study Materials" : selectedCategory}
-          </h1>
+    <div className="flex-1 flex flex-col h-full bg-slate-50 dark:bg-slate-950">
+      <div className="px-4 md:px-8 pb-8 pt-8 max-w-[1600px] mx-auto w-full">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+          <div>
+            <h1 className="text-4xl font-black tracking-tighter capitalize text-foreground">
+              {selectedCategory === "all" ? "Study Materials" : selectedCategory}
+            </h1>
+            <p className="text-sm text-muted font-medium mt-1">Manage and access your decentralized school library.</p>
+          </div>
           
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="relative group">
+            <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-primary transition-colors" />
             <input 
               type="text" 
-              placeholder="Search"
-              className="pl-9 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Search library..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-border rounded-2xl text-xs font-bold w-full md:w-72 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
             />
           </div>
         </div>
@@ -67,26 +70,27 @@ export default function MaterialsView({
           defaultCategory={selectedCategory === "all" ? "lectures" : selectedCategory as any} 
         />
 
-        {filteredMaterials.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-500 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
-            <FolderIcon className="w-16 h-16 text-slate-300 dark:text-slate-700 mb-4" />
-            <p className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-1">No {selectedCategory !== "all" ? selectedCategory : "materials"} yet</p>
-            <p className="text-sm text-center px-4">Upload a file or add a link to this section to get started.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredMaterials.map((m) => (
-              <MaterialCard 
-                key={m.id} 
-                material={m} 
-                isActive={activeMaterial === m.id}
-                onClick={() => openMaterial(m)} 
-              />
-            ))}
-          </div>
-        )}
+        <div className="mt-10">
+          {filteredMaterials.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-muted border-2 border-dashed border-border rounded-[40px] bg-white/50 dark:bg-slate-900/50">
+              <FolderIcon className="w-12 h-12 text-slate-200 dark:text-slate-800 mb-4" />
+              <p className="text-lg font-black text-foreground mb-1">Library is empty</p>
+              <p className="text-xs text-center px-4 max-w-xs font-medium">Upload your first study material to get started with your decentralized library.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+              {filteredMaterials.map((m) => (
+                <MaterialCard 
+                  key={m.id} 
+                  material={m} 
+                  isActive={activeMaterial === m.id}
+                  onClick={() => openMaterial(m)} 
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
-

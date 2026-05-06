@@ -1,96 +1,168 @@
 "use client";
 
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { LogOut, Wallet, AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { Wallet, LogOut, Loader2, AlertCircle, ExternalLink, Copy, Check, ChevronUp, Activity, Globe, ShieldCheck } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { clsx } from "clsx";
+import { AptosClient } from "aptos";
 
-export default function ConnectWallet() {
-  const { connect, account, disconnect, wallets } = useWallet();
+const client = new AptosClient("https://fullnode.mainnet.aptoslabs.com");
+
+interface ConnectWalletProps {
+  minimized?: boolean;
+}
+
+export default function ConnectWallet({ minimized = false }: ConnectWalletProps) {
+  const { connect, disconnect, account, connected, isLoading } = useWallet();
+  const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showMenu, setShowMenu] = useState(false);
+  const [balance, setBalance] = useState("0.00");
+  const [copied, setCopied] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const handleConnect = async () => {
-    console.log("Detecting wallets...", wallets);
-    
-    try {
-      setError(null);
-      
-      const isPetraInstalled = (window as any).aptos !== undefined;
-      console.log("Window.aptos detected:", isPetraInstalled);
-
-      if (!isPetraInstalled) {
-        setError("Petra Wallet extension not detected in browser.");
-        window.open("https://chromewebstore.google.com/detail/petra-aptos-wallet/ejjciapejcjjhgeoloeidcaidfnjocne", "_blank");
-        return;
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (connected && account?.address) {
+        try {
+          const resources: any[] = await client.getAccountResources(account.address);
+          const accountResource = resources.find((r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>");
+          if (accountResource) {
+            setBalance((parseInt(accountResource.data.coin.value) / 100_000_000).toFixed(2));
+          }
+        } catch (e) {
+          console.error(e);
+        }
       }
+    };
+    if (showMenu) fetchBalance();
+  }, [connected, account, showMenu]);
 
-      // Find by name exactly as the adapter reports it
-      const petra = wallets.find(w => w.name === "Petra");
-      
-      if (petra) {
-        console.log("Found Petra adapter, connecting...");
-        await connect(petra.name);
-      } else if (wallets.length > 0) {
-        console.log("Petra adapter not found, available:", wallets.map(w => w.name));
-        // Try the first available as a last resort or Petra by string
-        await connect("Petra");
-      } else {
-        console.log("No adapters found, attempting direct connect to 'Petra'");
-        await connect("Petra");
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
       }
-    } catch (e: any) {
-      console.error("Wallet connection error:", e);
-      setError("Connection failed. Please unlock your Petra extension.");
-      setTimeout(() => setError(null), 4000);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleCopy = () => {
+    if (account?.address) {
+      navigator.clipboard.writeText(account.address.toString());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  if (account) {
+  const truncateAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+
+  if (connected && account) {
     return (
-      <div className="space-y-2 w-full px-4 mt-6">
+      <div className="relative" ref={menuRef}>
+        {/* Wallet Trigger */}
         <button
-          onClick={disconnect}
-          className="group flex items-center gap-3 px-4 py-3 text-sm font-bold text-foreground bg-card border border-border hover:border-red-200 dark:hover:border-red-900/30 rounded-2xl transition-all w-full shadow-sm"
+          onClick={() => setShowMenu(!showMenu)}
+          className={clsx(
+            "group flex items-center bg-slate-50 dark:bg-slate-900 border border-border hover:border-primary/50 transition-all active:scale-95 relative",
+            minimized ? "w-12 h-12 rounded-2xl justify-center" : "w-full p-3 rounded-[28px] gap-3"
+          )}
         >
-          <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white text-xs shadow-lg shadow-blue-500/20">
-            <Wallet className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white shrink-0 shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+            <Wallet className="w-3.5 h-3.5" />
           </div>
-          <div className="flex-1 text-left min-w-0">
-            <p className="leading-tight truncate">{account.address.slice(0, 6)}...{account.address.slice(-4)}</p>
-            <div className="flex items-center gap-1">
-               <span className="text-[10px] text-green-500 font-bold uppercase tracking-wider">Connected</span>
-               <span className="w-1 h-1 rounded-full bg-slate-400" />
-               <span className="text-[8px] text-primary font-black uppercase">Shelby Active</span>
+          {!minimized && (
+            <div className="flex-1 text-left min-w-0">
+               <p className="text-[10px] font-black truncate text-foreground leading-none mb-1">{truncateAddress(account.address.toString())}</p>
+               <div className="flex items-center gap-1">
+                  <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
+                  <p className="text-[8px] font-black text-muted uppercase tracking-widest">Active</p>
+               </div>
             </div>
-          </div>
-          <LogOut className="w-4 h-4 text-muted group-hover:text-red-500 transition-colors" />
+          )}
+          {!minimized && <ChevronUp className={clsx("w-3 h-3 text-muted transition-transform", showMenu && "rotate-180")} />}
         </button>
+
+        {/* Expanded Wallet Menu */}
+        {showMenu && (
+          <div className="absolute bottom-full left-0 mb-4 w-72 bg-white dark:bg-slate-950 border border-border rounded-[40px] shadow-2xl p-6 animate-in slide-in-from-bottom-4 duration-300 z-[100]">
+             <div className="flex justify-between items-start mb-6">
+                <div>
+                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted mb-1">Current Wallet</h4>
+                   <p className="text-sm font-black text-foreground">{truncateAddress(account.address.toString())}</p>
+                </div>
+                <button 
+                  onClick={handleCopy}
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-primary"
+                >
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </button>
+             </div>
+
+             <div className="p-5 bg-slate-50 dark:bg-slate-900 rounded-[32px] mb-6">
+                <div className="flex justify-between items-center mb-1">
+                   <p className="text-[9px] font-black uppercase tracking-widest text-muted">Aptos Balance</p>
+                   <Globe className="w-3 h-3 text-primary" />
+                </div>
+                <p className="text-3xl font-black tracking-tighter text-foreground">{balance} APT</p>
+             </div>
+
+             <div className="space-y-2 mb-6">
+                <button 
+                  onClick={() => window.open(`https://explorer.aptoslabs.com/account/${account.address}?network=mainnet`, "_blank")}
+                  className="flex items-center justify-between w-full p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all group"
+                >
+                   <div className="flex items-center gap-3">
+                      <Activity className="w-4 h-4 text-muted group-hover:text-primary transition-colors" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">View Activity</span>
+                   </div>
+                   <ExternalLink className="w-3 h-3 text-muted" />
+                </button>
+                <div className="flex items-center justify-between w-full p-3.5 bg-green-500/5 rounded-2xl">
+                   <div className="flex items-center gap-3">
+                      <ShieldCheck className="w-4 h-4 text-green-500" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-green-600">On-Chain Verified</span>
+                   </div>
+                </div>
+             </div>
+
+             <button
+              onClick={() => disconnect()}
+              className="flex items-center justify-center gap-2 w-full py-4 text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-500/5 hover:bg-red-500/10 rounded-2xl transition-all"
+            >
+              <LogOut className="w-4 h-4" />
+              Disconnect Wallet
+            </button>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="space-y-2 w-full px-4 mt-6">
-      {error && (
-        <div className="flex items-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-[10px] font-bold animate-in fade-in slide-in-from-top-1">
-          <AlertCircle className="w-3.5 h-3.5" />
-          {error}
+    <div className="space-y-3">
+      {error && !minimized && (
+        <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl text-[9px] font-bold text-red-600 dark:text-red-400">
+          <AlertCircle className="w-3 h-3 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
+
       <button
-        onClick={handleConnect}
-        className="flex flex-col items-center gap-1 px-4 py-3 text-sm font-bold text-white bg-[#0f172a] hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 rounded-2xl transition-all w-full justify-center shadow-lg shadow-slate-900/20 dark:shadow-none border border-transparent"
+        onClick={() => connect("Petra" as any)}
+        disabled={isLoading}
+        className={clsx(
+          "w-full flex items-center bg-primary text-white transition-all disabled:opacity-50 shadow-xl shadow-primary/30 active:scale-95 group relative",
+          minimized ? "h-12 w-12 rounded-2xl justify-center" : "px-5 py-4 rounded-[24px] justify-between"
+        )}
       >
-        <div className="flex items-center gap-2">
-          <Wallet className="w-5 h-5" />
-          Connect Aptos Wallet
+        <div className="flex items-center gap-3">
+          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
+          {!minimized && <span className="font-black text-[10px] uppercase tracking-widest">Connect Aptos</span>}
         </div>
-        <span className="text-[9px] opacity-60 font-medium uppercase tracking-widest">Supports Shelby Protocol</span>
+        {!minimized && <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
       </button>
     </div>
   );
 }
-
-
-
-
-

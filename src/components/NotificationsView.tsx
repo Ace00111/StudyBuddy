@@ -1,89 +1,144 @@
 "use client";
 
-import { Bell, Check, Trash2, Clock, Info, Shield, Zap } from "lucide-react";
+import { Trash2, Bell, Shield, Zap, Info, CheckCircle, XCircle } from "lucide-react";
 
-export default function NotificationsView() {
-  const notifications = [
-    {
-      id: 1,
-      title: "File Successfully Synced",
-      message: "Your 'Quantum Physics Lecture.pdf' has been successfully backed up to the Shelby Protocol network.",
-      time: "10 minutes ago",
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  time: string;
+  isRead: boolean;
+  type?: "success" | "info" | "security";
+}
+
+interface NotificationsViewProps {
+  notifications: Notification[];
+  setNotifications: (notifications: Notification[]) => void;
+}
+
+export default function NotificationsView({ notifications, setNotifications }: NotificationsViewProps) {
+  const markAsRead = (id: number) => {
+    setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n));
+  };
+
+  const dismissNotification = (id: number) => {
+    setNotifications(notifications.filter(n => n.id !== id));
+  };
+
+  const markAllRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+  };
+
+  const addTestNotification = () => {
+    const newNotif: Notification = {
+      id: Date.now(),
+      title: "File Sync Complete",
+      message: "Your study materials have been successfully backed up to your secure library.",
+      time: "Just now",
       type: "success",
-      icon: Zap,
-      color: "text-amber-500 bg-amber-50 dark:bg-amber-500/10"
-    },
-    {
-      id: 2,
-      title: "New Peer Connected",
-      message: "A new study node from your university has joined the decentralized network.",
-      time: "1 hour ago",
-      type: "info",
-      icon: Info,
-      color: "text-blue-500 bg-blue-50 dark:bg-blue-500/10"
-    },
-    {
-      id: 3,
-      title: "Security Update",
-      message: "Your protocol keys were verified. Access to decentralized storage is secure.",
-      time: "Yesterday",
-      type: "security",
-      icon: Shield,
-      color: "text-purple-500 bg-purple-50 dark:bg-purple-500/10"
+      isRead: false
+    };
+    setNotifications([newNotif, ...notifications]);
+  };
+
+  const clearAll = () => {
+    if (confirm("Clear all notifications?")) {
+      setNotifications([]);
     }
-  ];
+  };
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case "success": return CheckCircle;
+      case "info": return Info;
+      case "security": return Shield;
+      default: return Bell;
+    }
+  };
+
+  const getColor = (type: string) => {
+    switch (type) {
+      case "success": return "text-green-500 bg-green-50 dark:bg-green-500/10";
+      case "info": return "text-blue-500 bg-blue-50 dark:bg-blue-500/10";
+      case "security": return "text-purple-500 bg-purple-50 dark:bg-purple-500/10";
+      default: return "text-slate-500 bg-slate-50 dark:bg-slate-500/10";
+    }
+  };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-50 dark:bg-slate-950">
-      <div className="px-4 md:px-8 pt-8 pb-4">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-1">Notifications</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Stay updated with your network activity.</p>
-          </div>
-          <button className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+    <div className="flex-1 p-6 md:p-10 max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-8">
+        <div>
+          <h1 className="text-4xl font-black tracking-tighter mb-2">Notifications</h1>
+          <p className="text-muted text-sm font-medium">Keep track of your study library updates.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={markAllRead}
+            className="text-sm font-semibold text-primary hover:underline"
+          >
             Mark all as read
+          </button>
+          <button 
+            onClick={clearAll}
+            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
+            title="Clear All"
+          >
+            <Trash2 className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      <div className="px-4 md:px-8 pb-8 max-w-3xl">
-        <div className="space-y-3">
-          {notifications.map((notif) => (
-            <div key={notif.id} className="group p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl flex gap-4 hover:shadow-sm transition-all">
-              <div className={`w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center ${notif.color}`}>
-                <notif.icon className="w-6 h-6" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-bold text-slate-900 dark:text-slate-100">{notif.title}</h3>
-                  <span className="text-xs text-slate-400 font-medium">{notif.time}</span>
+      <div className="space-y-4">
+        {notifications.length > 0 ? (
+          notifications.map((notif) => {
+            const Icon = getIcon(notif.type || "");
+            const color = getColor(notif.type || "");
+            
+            return (
+              <div 
+                key={notif.id} 
+                className={`group p-6 bg-card border border-border rounded-3xl flex gap-5 hover:shadow-lg transition-all relative ${!notif.isRead ? 'border-primary/20' : ''}`}
+              >
+                {!notif.isRead && (
+                  <div className="absolute top-6 left-6 w-2 h-2 bg-primary rounded-full animate-pulse" />
+                )}
+                <div className={`w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center ${color}`}>
+                  <Icon className="w-6 h-6" />
                 </div>
-                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
-                  {notif.message}
-                </p>
-                <div className="flex items-center gap-3">
-                  <button className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 hover:bg-blue-50 dark:hover:bg-blue-500/10 px-2 py-1 rounded-lg transition-colors">
-                    <Check className="w-3.5 h-3.5" />
-                    Accept
-                  </button>
-                  <button className="text-xs font-bold text-slate-400 hover:text-red-500 flex items-center gap-1 transition-colors">
-                    <Trash2 className="w-3.5 h-3.5" />
-                    Dismiss
-                  </button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-bold text-foreground truncate pr-4">{notif.title}</h3>
+                    <span className="text-xs text-muted font-medium shrink-0">{notif.time}</span>
+                  </div>
+                  <p className="text-sm text-muted leading-relaxed mb-4">
+                    {notif.message}
+                  </p>
+                  <div className="flex items-center gap-4">
+                    {!notif.isRead && (
+                      <button 
+                        onClick={() => markAsRead(notif.id)}
+                        className="text-xs font-bold text-primary hover:underline"
+                      >
+                        Mark as read
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => dismissNotification(notif.id)}
+                      className="text-xs font-bold text-muted hover:text-red-500 flex items-center gap-1 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Dismiss
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-        
-        {notifications.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 text-slate-300">
-              <Bell className="w-10 h-10" />
-            </div>
-            <h2 className="text-xl font-bold mb-1">All caught up!</h2>
-            <p className="text-slate-500">No new notifications at the moment.</p>
+            );
+          })
+        ) : (
+          <div className="py-20 text-center">
+            <Bell className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-500">No new notifications</p>
           </div>
         )}
       </div>

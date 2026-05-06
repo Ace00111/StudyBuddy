@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { uploadToShelby } from "@/lib/shelby";
-import { Upload, Link as LinkIcon } from "lucide-react";
+import { Upload, Link as LinkIcon, AlertCircle } from "lucide-react";
 import { Material } from "@/lib/materials";
 
 interface UploadBoxProps {
@@ -24,11 +24,12 @@ export default function UploadBox({ onUpload, defaultCategory = "lectures" }: Up
   }, [defaultCategory]);
 
   const handleUploadFile = async () => {
-    if (!file || !account) return;
+    if (!file) return;
     setIsUploading(true);
     
     try {
-      const shelbyId = await uploadToShelby(file, account.address);
+      const ownerAddress = account?.address?.toString() || "guest-local";
+      const shelbyId = await uploadToShelby(file, ownerAddress);
       onUpload({
         id: crypto.randomUUID(),
         name: file.name,
@@ -57,27 +58,26 @@ export default function UploadBox({ onUpload, defaultCategory = "lectures" }: Up
     setLink("");
   };
 
-  if (!account) {
-    return (
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-50" />
-        <div className="relative z-10 flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-primary border border-slate-700 shadow-xl group-hover:scale-110 transition-transform">
-             <Upload className="w-8 h-8" />
-          </div>
-          <div>
-            <h4 className="text-xl font-bold mb-2">Shelby Protocol Storage</h4>
-            <p className="text-muted text-sm max-w-sm mx-auto mb-6">
-              Connect your Aptos Wallet to activate decentralized file storage and global peer-to-peer syncing.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-4 mb-8">
+      {!account && (
+        <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl mb-2">
+          <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500 shrink-0">
+             <AlertCircle className="w-4 h-4" />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs font-bold text-amber-500">Guest Mode Active</p>
+            <p className="text-[10px] text-amber-500/80">Connecting your wallet will activate decentralized sync to Shelby Protocol.</p>
+          </div>
+          <button 
+            onClick={() => document.getElementById('wallet-connect-btn')?.click()}
+            className="text-[10px] font-black text-amber-500 hover:underline uppercase"
+          >
+            Connect Now
+          </button>
+        </div>
+      )}
+
       {/* Category Selector */}
       <div className="flex items-center gap-3 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl w-fit self-end">
         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Target:</span>

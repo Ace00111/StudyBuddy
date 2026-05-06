@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, FolderOpen, FileText, Settings, Bell, X } from "lucide-react";
+import { Home, FolderOpen, FileText, Settings, Bell, X, ChevronLeft, ChevronRight, LayoutDashboard, BarChart3 } from "lucide-react";
 import ConnectWallet from "./ConnectWallet";
 import { clsx } from "clsx";
 
@@ -11,6 +11,9 @@ interface SidebarProps {
   onCategoryChange?: (category: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
+  notificationCount?: number;
+  minimized?: boolean;
+  onToggleMinimize?: () => void;
 }
 
 export default function Sidebar({ 
@@ -19,7 +22,10 @@ export default function Sidebar({
   activeCategory = "all",
   onCategoryChange = () => {},
   isOpen = false,
-  onClose = () => {}
+  onClose = () => {},
+  notificationCount = 0,
+  minimized = false,
+  onToggleMinimize = () => {}
 }: SidebarProps) {
   return (
     <>
@@ -31,16 +37,26 @@ export default function Sidebar({
         />
       )}
 
-      <div className={clsx(
-        "fixed inset-y-0 left-0 z-50 w-72 bg-sidebar border-r border-slate-200 dark:border-slate-800 flex flex-col pt-6 pb-4 transition-transform duration-300 lg:relative lg:translate-x-0 lg:z-0",
-        isOpen ? "translate-x-0" : "-translate-x-full"
+      <div 
+        onMouseEnter={() => window.dispatchEvent(new Event('sidebar_hovered'))}
+        onMouseLeave={() => window.dispatchEvent(new Event('sidebar_left'))}
+        className={clsx(
+        "fixed inset-y-0 left-0 z-50 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col pt-6 pb-4 transition-all duration-500 lg:relative lg:translate-x-0 lg:z-0 shadow-2xl lg:shadow-none h-screen max-h-screen",
+        isOpen ? "translate-x-0" : "-translate-x-full",
+        minimized ? "w-20" : "w-72"
       )}>
-        <div className="px-6 mb-8 flex items-center justify-between">
+        {/* Toggle Button Removed as requested */}
+
+        {/* Formal Logo Section */}
+        <div className={clsx(
+          "px-6 mb-10 flex items-center justify-between",
+          minimized && "px-0 justify-center"
+        )}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <div className="w-5 h-5 bg-white rounded-md rotate-45" />
+            <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
+               <div className="w-5 h-5 bg-white rounded-md rotate-45" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">StudyBuddy</span>
+            {!minimized && <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">StudyBuddy</span>}
           </div>
           <button 
             onClick={onClose}
@@ -50,127 +66,112 @@ export default function Sidebar({
           </button>
         </div>
 
-        <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
+        <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar">
           <button 
             onClick={() => { onTabChange("home"); onClose(); }}
+            title="Home"
             className={clsx(
-              "flex items-center gap-3 px-4 py-2.5 w-full text-left rounded-2xl transition-all font-medium",
+              "flex items-center gap-3 px-4 py-3 w-full text-left rounded-2xl transition-all font-medium text-sm",
+              minimized && "justify-center px-0",
               activeTab === "home" 
                 ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400" 
-                : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100"
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
             )}
           >
-            <Home className="w-5 h-5" />
-            <span>Home</span>
+            <Home className="w-5 h-5 shrink-0" />
+            {!minimized && <span>Home</span>}
           </button>
           
-          <div className="pt-2">
-            <button 
-              onClick={() => { onTabChange("materials"); onCategoryChange("all"); onClose(); }}
-              className={clsx(
-                "flex items-center gap-3 px-4 py-2.5 w-full text-left rounded-2xl transition-all font-medium",
-                activeTab === "materials" 
-                  ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400" 
-                  : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-              )}
-            >
-              <FolderOpen className="w-5 h-5" />
-              <span>Materials</span>
-            </button>
-            
-            {activeTab === "materials" && (
-              <div className="pl-12 pr-3 py-1 space-y-1 mt-1 border-l border-slate-100 dark:border-slate-800 ml-6">
-                <button 
-                  onClick={() => onCategoryChange("lectures")}
-                  className={clsx(
-                    "block w-full text-left text-sm py-1.5 transition-colors",
-                    activeCategory === "lectures" ? "font-semibold text-blue-600 dark:text-blue-400" : "text-slate-400 hover:text-blue-500"
-                  )}
-                >
-                  Lectures
-                </button>
-                <button 
-                  onClick={() => onCategoryChange("notes")}
-                  className={clsx(
-                    "block w-full text-left text-sm py-1.5 transition-colors",
-                    activeCategory === "notes" ? "font-semibold text-blue-600 dark:text-blue-400" : "text-slate-400 hover:text-blue-500"
-                  )}
-                >
-                  Study Notes
-                </button>
-                <button 
-                  onClick={() => onCategoryChange("assignments")}
-                  className={clsx(
-                    "block w-full text-left text-sm py-1.5 transition-colors",
-                    activeCategory === "assignments" ? "font-semibold text-blue-600 dark:text-blue-400" : "text-slate-400 hover:text-blue-500"
-                  )}
-                >
-                  Assignments
-                </button>
-                <button 
-                  onClick={() => onCategoryChange("links")}
-                  className={clsx(
-                    "block w-full text-left text-sm py-1.5 transition-colors",
-                    activeCategory === "links" ? "font-semibold text-blue-600 dark:text-blue-400" : "text-slate-400 hover:text-blue-500"
-                  )}
-                >
-                  Links
-                </button>
-              </div>
+          <button 
+            onClick={() => { onTabChange("materials"); onCategoryChange("all"); onClose(); }}
+            title="Materials"
+            className={clsx(
+              "flex items-center gap-3 px-4 py-3 w-full text-left rounded-2xl transition-all font-medium text-sm",
+              minimized && "justify-center px-0",
+              activeTab === "materials" 
+                ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400" 
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
             )}
-          </div>
-
+          >
+            <FolderOpen className="w-5 h-5 shrink-0" />
+            {!minimized && <span>Materials</span>}
+          </button>
 
           <button 
             onClick={() => { onTabChange("notes"); onClose(); }}
+            title="Notes"
             className={clsx(
-              "flex items-center gap-3 px-4 py-2.5 w-full text-left rounded-2xl transition-all font-medium",
+              "flex items-center gap-3 px-4 py-3 w-full text-left rounded-2xl transition-all font-medium text-sm",
+              minimized && "justify-center px-0",
               activeTab === "notes" 
                 ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400" 
                 : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
             )}
           >
-            <FileText className="w-5 h-5" />
-            <span>Notes</span>
+            <FileText className="w-5 h-5 shrink-0" />
+            {!minimized && <span>Notes</span>}
+          </button>
+
+          <button 
+            onClick={() => { onTabChange("stats"); onClose(); }}
+            title="Library Stats"
+            className={clsx(
+              "flex items-center gap-3 px-4 py-3 w-full text-left rounded-2xl transition-all font-medium text-sm",
+              minimized && "justify-center px-0",
+              activeTab === "stats" 
+                ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400" 
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+            )}
+          >
+            <BarChart3 className="w-5 h-5 shrink-0" />
+            {!minimized && <span>Stats</span>}
           </button>
           
           <button 
             onClick={() => { onTabChange("notifications"); onClose(); }}
+            title="Notifications"
             className={clsx(
-              "flex items-center justify-between px-4 py-2.5 w-full text-left rounded-2xl transition-all font-medium",
+              "flex items-center justify-between px-4 py-3 w-full text-left rounded-2xl transition-all font-medium text-sm",
+              minimized && "justify-center px-0",
               activeTab === "notifications" 
                 ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400" 
                 : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
             )}
           >
             <div className="flex items-center gap-3">
-              <Bell className="w-5 h-5" />
-              <span>Notifications</span>
+              <Bell className="w-5 h-5 shrink-0" />
+              {!minimized && <span>Notifications</span>}
             </div>
-            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
+            {!minimized && notificationCount > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                {notificationCount}
+              </span>
+            )}
           </button>
         </nav>
 
-        <div className="px-4 space-y-1.5 mt-auto border-t border-slate-100 dark:border-slate-800 pt-6">
+        {/* Bottom Section for Settings and Wallet */}
+        <div className="px-4 pb-4 mt-auto space-y-2">
           <button 
             onClick={() => { onTabChange("settings"); onClose(); }}
+            title="Settings"
             className={clsx(
-              "flex items-center gap-3 px-4 py-2.5 w-full text-left rounded-2xl transition-all font-medium",
+              "flex items-center gap-3 px-4 py-3 w-full text-left rounded-2xl transition-all font-medium text-sm",
+              minimized && "justify-center px-0",
               activeTab === "settings" 
                 ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400" 
                 : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
             )}
           >
-            <Settings className="w-5 h-5" />
-            <span>Settings</span>
+            <Settings className="w-5 h-5 shrink-0" />
+            {!minimized && <span>Settings</span>}
           </button>
-        </div>
 
-        <div className="px-4 mt-6">
-          <ConnectWallet />
+          <div className={clsx(minimized && "px-1")}>
+            <ConnectWallet minimized={minimized} />
+          </div>
         </div>
       </div>
     </>
   );
 }
-
