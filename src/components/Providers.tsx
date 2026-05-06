@@ -19,7 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   // Return children without ThemeProvider during SSR to prevent hydration script errors
   if (!mounted) {
     return (
-      <AptosWalletAdapterProvider plugins={wallets} autoConnect={false}>
+      <AptosWalletAdapterProvider autoConnect={false}>
         {children}
       </AptosWalletAdapterProvider>
     );
@@ -27,7 +27,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-      <AptosWalletAdapterProvider plugins={wallets} autoConnect={false}>
+      <AptosWalletAdapterProvider autoConnect={false}>
         {children}
       </AptosWalletAdapterProvider>
     </ThemeProvider>

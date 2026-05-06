@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import InfoPane from "@/components/InfoPane";
 import HomeView from "@/components/HomeView";
@@ -9,70 +9,48 @@ import SettingsView from "@/components/SettingsView";
 import NotesView from "@/components/NotesView";
 import NotificationsView from "@/components/NotificationsView";
 import { Material } from "@/lib/materials";
-import { loadWalletData, saveWalletMaterials, saveWalletNotes, loadWalletProfile } from "@/lib/walletStorage";
 import { useTheme } from "next-themes";
-import { Moon, Sun, Sidebar as SidebarIcon, Menu } from "lucide-react";
+import { Moon, Sun, Sidebar as SidebarIcon, Menu, MousePointer2, LayoutDashboard } from "lucide-react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  time: string;
+  isRead: boolean;
+  type?: "success" | "info" | "security";
+}
+
 export default function Home() {
-  const { signAndSubmitTransaction, connected, account } = useWallet();
-
-  // Track the previous wallet address so we know when it changes
-  const prevWalletRef = useRef<string | null>(null);
-
   const [materials, setMaterials] = useState<Material[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
-  const [headerProfile, setHeaderProfile] = useState({ name: "Guest Scholar", avatar: "" });
 
-  // ---------- Wallet-aware data loading ----------
-  // Runs whenever the connected wallet changes (including disconnect → null)
+  // Initialize from LocalStorage (Shelby Protocol Mock)
   useEffect(() => {
-    const walletAddress = account?.address?.toString() ?? null;
-
-    // Skip if the wallet hasn't actually changed
-    if (walletAddress === prevWalletRef.current) return;
-    prevWalletRef.current = walletAddress;
-
-    // Load data for the new wallet (or guest)
-    const { materials: m, notes: n } = loadWalletData(walletAddress);
-    setMaterials(m);
-    setNotes(n);
-
-    // Update profile display
-    const savedProfile = loadWalletProfile(walletAddress);
-    if (savedProfile) {
-      setHeaderProfile(savedProfile);
-    } else if (!walletAddress) {
-      setHeaderProfile({ name: "Guest Scholar", avatar: "" });
+    const savedMaterials = localStorage.getItem('studybuddy_materials');
+    if (savedMaterials) setMaterials(JSON.parse(savedMaterials));
+    
+    const savedNotes = localStorage.getItem('studybuddy_notes');
+    if (savedNotes) {
+      setNotes(JSON.parse(savedNotes));
     } else {
-      setHeaderProfile({ name: "New Scholar", avatar: "" });
+      setNotes([{ id: 1, title: "Quantum Physics Summary", excerpt: "The main principles of quantum mechanics include...", content: "The main principles of quantum mechanics include superposition, entanglement, and the uncertainty principle.", date: "2 hours ago", color: 'blue', tags: ['Physics', 'Exams'] }]);
     }
-  }, [account?.address, connected]);
+  }, []);
 
-  // ---------- Persist materials & notes whenever they change ----------
+  // Persist to LocalStorage
   useEffect(() => {
-    const walletAddress = account?.address?.toString() ?? null;
-    saveWalletMaterials(walletAddress, materials);
-  }, [materials, account?.address]);
+    if (materials.length > 0) localStorage.setItem('studybuddy_materials', JSON.stringify(materials));
+  }, [materials]);
 
   useEffect(() => {
-    const walletAddress = account?.address?.toString() ?? null;
-    saveWalletNotes(walletAddress, notes);
-  }, [notes, account?.address]);
-
-  // Keep header profile in sync when SettingsView saves
-  useEffect(() => {
-    const onProfileUpdate = () => {
-      const walletAddress = account?.address?.toString() ?? null;
-      const saved = loadWalletProfile(walletAddress);
-      if (saved) setHeaderProfile(saved);
-    };
-    window.addEventListener('studybuddy_profile_updated', onProfileUpdate);
-    return () => window.removeEventListener('studybuddy_profile_updated', onProfileUpdate);
-  }, [account?.address]);
+    if (notes.length > 0) localStorage.setItem('studybuddy_notes', JSON.stringify(notes));
+  }, [notes]);
+  const { signAndSubmitTransaction, connected } = useWallet();
 
   const [activeMaterial, setActiveMaterial] = useState<string | null>(null);
-  const [notifications, setNotifications] = useState([
+  const [notifications, setNotifications] = useState<Notification[]>([
     { id: 1, title: "File Successfully Synced", message: "Your library metadata has been successfully backed up on-chain.", time: "10 minutes ago", isRead: false, type: "success" },
   ]);
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -82,7 +60,27 @@ export default function Home() {
   const [isInfoPaneOpen, setIsInfoPaneOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
+  const [headerProfile, setHeaderProfile] = useState({ name: "Guest Scholar", avatar: "" });
   const { theme, setTheme } = useTheme();
+
+  // Profile Persistence & Dummy Logic
+  useEffect(() => {
+    const updateHeader = () => {
+      if (!connected) {
+        setHeaderProfile({ name: "Guest Scholar", avatar: "" });
+        return;
+      }
+      const saved = localStorage.getItem('studybuddy_profile');
+      if (saved) {
+        setHeaderProfile(JSON.parse(saved));
+      } else {
+        setHeaderProfile({ name: "New Scholar", avatar: "" });
+      }
+    };
+    updateHeader();
+    window.addEventListener('studybuddy_profile_updated', updateHeader);
+    return () => window.removeEventListener('studybuddy_profile_updated', updateHeader);
+  }, [connected]);
 
   // Sidebar Auto-Minimize Logic (5s)
   useEffect(() => {
@@ -152,12 +150,11 @@ export default function Home() {
     }
 
     try {
-      // Correct InputTransactionData shape for current aptos wallet adapter
       const payload = {
         data: {
           function: "0x1::aptos_account::transfer" as `${string}::${string}::${string}`,
           typeArguments: [] as [],
-          functionArguments: ["0x0000000000000000000000000000000000000000000000000000000000000001", "1"],
+          functionArguments: ["0x1", "1"],
         }
       };
       
@@ -245,7 +242,7 @@ export default function Home() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {activeTab === "home" && <div className="animate-in fade-in zoom-in-95 duration-700 h-full"><HomeView materials={materials} notesCount={notes.length} onExplore={() => setActiveTab("materials")} /></div>}
+          {activeTab === "home" && <div className="animate-in fade-in zoom-in-95 duration-700 h-full"><HomeView materials={materials} onExplore={() => setActiveTab("materials")} /></div>}
           {activeTab === "materials" && <div className="animate-in fade-in slide-in-from-right-8 duration-700"><MaterialsView materials={materials} onUpload={handleUpload} onDelete={(id) => setMaterials(m => m.filter(x => x.id !== id))} activeMaterial={activeMaterial} setActiveMaterial={setActiveMaterial} selectedCategory={activeCategory} /></div>}
           {activeTab === "settings" && <div className="animate-in fade-in duration-500"><SettingsView /></div>}
           {activeTab === "notes" && <div className="animate-in fade-in slide-in-from-bottom-8 duration-700"><NotesView sharedNotes={notes} setSharedNotes={setNotes} /></div>}

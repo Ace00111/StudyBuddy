@@ -25,7 +25,7 @@ export default function ConnectWallet({ minimized = false }: ConnectWalletProps)
     const fetchBalance = async () => {
       if (connected && account?.address) {
         try {
-          const resources: any[] = await client.getAccountResources(account.address);
+          const resources: any[] = await client.getAccountResources(account.address.toString());
           const accountResource = resources.find((r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>");
           if (accountResource) {
             setBalance((parseInt(accountResource.data.coin.value) / 100_000_000).toFixed(2));

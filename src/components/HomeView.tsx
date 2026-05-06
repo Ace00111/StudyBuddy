@@ -1,16 +1,16 @@
 "use client";
 
-import { Shield, ArrowRight, BookOpen, Sparkles, MousePointer2, StickyNote } from "lucide-react";
+import { Clock, MoreHorizontal, Zap, Shield, Globe, ArrowRight, Activity, BookOpen, GraduationCap, Sparkles, Play, Plus, MousePointer2 } from "lucide-react";
 import { Material } from "@/lib/materials";
 import { useState, useEffect } from "react";
 
-function LegendItem({ color, label, value, unit = "files", perc }: { color: string, label: string, value: number, unit?: string, perc: number }) {
+function LegendItem({ color, label, value, perc }: { color: string, label: string, value: number, perc: number }) {
   return (
-    <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all group hover:scale-[1.02] duration-200">
-      <div className={`w-2 h-2 rounded-full ${color} shadow-lg shadow-current group-hover:scale-150 transition-transform`} />
+    <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
+      <div className={`w-2 h-2 rounded-full ${color} shadow-lg shadow-current`} />
       <div className="flex-1 min-w-0">
         <p className="text-[10px] font-black text-foreground uppercase tracking-widest">{label}</p>
-        <p className="text-[9px] text-muted font-bold">{value} {unit} • {Math.round(perc)}%</p>
+        <p className="text-[9px] text-muted font-bold">{value} files • {Math.round(perc)}%</p>
       </div>
     </div>
   );
@@ -18,11 +18,10 @@ function LegendItem({ color, label, value, unit = "files", perc }: { color: stri
 
 interface HomeViewProps {
   materials?: Material[];
-  notesCount?: number;
   onExplore?: () => void;
 }
 
-export default function HomeView({ materials = [], notesCount = 0, onExplore }: HomeViewProps) {
+export default function HomeView({ materials = [], onExplore }: HomeViewProps) {
   const [privacy, setPrivacy] = useState({ stealthMode: false, hideActivity: false });
 
   useEffect(() => {
@@ -46,15 +45,13 @@ export default function HomeView({ materials = [], notesCount = 0, onExplore }: 
     others: materials.filter(m => m.type === "file" && !/\.(pdf|mp3|wav|m4a|mp4|mov|avi|png|jpg|jpeg|gif|svg)$/i.test(m.name)).length
   };
 
-  // Total denominator includes notes so chart reflects both files AND notes
-  const total = materials.length + notesCount || 1;
+  const total = materials.length || 1;
   const segments = [
-    { color: '#22c55e', perc: (notesCount / total) * 100 },       // green = notes
-    { color: '#3b82f6', perc: (stats.pdf / total) * 100 },         // blue  = PDFs
-    { color: '#ec4899', perc: (stats.lectures / total) * 100 },    // pink  = audio
-    { color: '#8b5cf6', perc: (stats.video / total) * 100 },       // purple= video
-    { color: '#eab308', perc: (stats.images / total) * 100 },      // yellow= images
-    { color: '#64748b', perc: (stats.others / total) * 100 }       // slate = others
+    { color: '#3b82f6', perc: (stats.pdf / total) * 100 },
+    { color: '#ec4899', perc: (stats.lectures / total) * 100 },
+    { color: '#8b5cf6', perc: (stats.video / total) * 100 },
+    { color: '#eab308', perc: (stats.images / total) * 100 },
+    { color: '#64748b', perc: (stats.others / total) * 100 }
   ];
 
   let current = 0;
@@ -117,21 +114,7 @@ export default function HomeView({ materials = [], notesCount = 0, onExplore }: 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Storage Chart */}
-        <div
-          className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[50px] p-8 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group"
-          style={{ animation: 'slideUpFade 0.7s cubic-bezier(0.22,1,0.36,1) both' }}
-        >
-          <style>{`
-            @keyframes slideUpFade {
-              from { opacity: 0; transform: translateY(32px) scale(0.97); }
-              to   { opacity: 1; transform: translateY(0)   scale(1); }
-            }
-            @keyframes spin-slow {
-              from { transform: rotate(0deg); }
-              to   { transform: rotate(360deg); }
-            }
-            .spin-slow { animation: spin-slow 20s linear infinite; }
-          `}</style>
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[50px] p-8 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
           
           <div className="flex justify-between items-start mb-8 relative z-10">
@@ -142,36 +125,35 @@ export default function HomeView({ materials = [], notesCount = 0, onExplore }: 
                  <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Used</span>
                </div>
              </div>
-             <div className="flex items-center gap-2">
-               <span className="text-[9px] font-black text-muted uppercase tracking-widest">{materials.length + notesCount} Items</span>
-             </div>
+             <button className="w-10 h-10 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20">
+               <MoreHorizontal className="w-5 h-5" />
+             </button>
           </div>
 
           <div className="flex flex-col xl:flex-row items-center gap-12 relative z-10">
              <div className="relative w-64 h-64 flex items-center justify-center">
-               {/* Rotating glow ring */}
-               <div
-                 className="absolute inset-0 rounded-full opacity-30 blur-xl spin-slow"
+               <div 
+                 className="absolute inset-0 rounded-full shadow-2xl opacity-20 blur-2xl"
                  style={{ background: `conic-gradient(${gradientParts})` }}
                />
-               {/* Main donut */}
-               <div
-                 className="w-full h-full rounded-full flex items-center justify-center p-8 transition-all duration-700 group-hover:scale-105"
+               <div 
+                 className="w-full h-full rounded-full flex items-center justify-center p-8 transition-all duration-1000 group-hover:rotate-6"
                  style={{ background: `conic-gradient(${gradientParts})` }}
                >
-                 <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex flex-col items-center justify-center shadow-inner">
-                   <p className="text-5xl font-black text-foreground tracking-tighter leading-none">{materials.length + notesCount}</p>
-                   <p className="text-[10px] text-muted font-black uppercase tracking-[0.2em] mt-1">Total</p>
+                 <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center shadow-inner relative overflow-hidden">
+                   <div className="text-center z-10">
+                     <p className="text-5xl font-black text-foreground tracking-tighter">{materials.length}</p>
+                     <p className="text-[10px] text-muted font-black uppercase tracking-[0.2em] mt-1">Files</p>
+                   </div>
                  </div>
                </div>
              </div>
 
              <div className="flex-1 w-full grid grid-cols-2 gap-3">
-                <LegendItem color="bg-green-500" label="Notes" value={notesCount} unit="notes" perc={(notesCount/total)*100} />
-                <LegendItem color="bg-blue-500" label="PDFs" value={stats.pdf} perc={(stats.pdf/total)*100} />
+                <LegendItem color="bg-blue-500" label="Notes" value={stats.pdf} perc={(stats.pdf/total)*100} />
                 <LegendItem color="bg-pink-500" label="Audio" value={stats.lectures} perc={(stats.lectures/total)*100} />
                 <LegendItem color="bg-purple-500" label="Videos" value={stats.video} perc={(stats.video/total)*100} />
-                <LegendItem color="bg-yellow-500" label="Images" value={stats.images} perc={(stats.images/total)*100} />
+                <LegendItem color="bg-yellow-500" label="Captures" value={stats.images} perc={(stats.images/total)*100} />
                 <LegendItem color="bg-slate-500" label="Others" value={stats.others} perc={(stats.others/total)*100} />
              </div>
           </div>
