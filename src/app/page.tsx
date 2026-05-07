@@ -8,6 +8,7 @@ import MaterialsView from "@/components/MaterialsView";
 import SettingsView from "@/components/SettingsView";
 import NotesView from "@/components/NotesView";
 import NotificationsView from "@/components/NotificationsView";
+import DownloadsView from "@/components/DownloadsView";
 import { Material } from "@/lib/materials";
 import { Sidebar as SidebarIcon, Menu, MousePointer2, LayoutDashboard } from "lucide-react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
@@ -239,6 +240,7 @@ export default function Home() {
         <div className="flex-1 overflow-y-auto">
           {activeTab === "home" && <div className="animate-in fade-in zoom-in-95 duration-700 h-full"><HomeView materials={materials} onExplore={() => setActiveTab("materials")} /></div>}
           {activeTab === "materials" && <div className="animate-in fade-in slide-in-from-right-8 duration-700"><MaterialsView materials={materials} onUpload={handleUpload} onDelete={(id) => setMaterials(m => m.filter(x => x.id !== id))} activeMaterial={activeMaterial} setActiveMaterial={setActiveMaterial} selectedCategory={activeCategory} /></div>}
+          {activeTab === "downloads" && <div className="animate-in fade-in slide-in-from-bottom-8 duration-700"><DownloadsView materials={materials} signAndSubmitTransaction={signAndSubmitTransaction} /></div>}
           {activeTab === "settings" && <div className="animate-in fade-in duration-500"><SettingsView /></div>}
           {activeTab === "notes" && <div className="animate-in fade-in slide-in-from-bottom-8 duration-700"><NotesView sharedNotes={notes} setSharedNotes={setNotes} /></div>}
           {activeTab === "notifications" && <div className="animate-in fade-in slide-in-from-left-8 duration-700"><NotificationsView notifications={notifications} setNotifications={setNotifications} /></div>}

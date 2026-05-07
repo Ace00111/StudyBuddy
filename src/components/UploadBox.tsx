@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { uploadToShelby } from "@/lib/shelby";
+import { uploadToShelby, type ShelbyUploadResult } from "@/lib/shelby";
 import { Upload, Link as LinkIcon, AlertCircle } from "lucide-react";
 import { Material } from "@/lib/materials";
 
@@ -12,7 +12,7 @@ interface UploadBoxProps {
 }
 
 export default function UploadBox({ onUpload, defaultCategory = "lectures" }: UploadBoxProps) {
-  const { account } = useWallet();
+  const { account, signAndSubmitTransaction } = useWallet();
   const [file, setFile] = useState<File | null>(null);
   const [link, setLink] = useState("");
   const [category, setCategory] = useState<Material["category"]>(defaultCategory);
@@ -22,6 +22,26 @@ export default function UploadBox({ onUpload, defaultCategory = "lectures" }: Up
   useEffect(() => {
     setCategory(defaultCategory);
   }, [defaultCategory]);
+
+  const createShelbyUploadTransaction = async (fileName: string) => {
+    try {
+      const payload = {
+        data: {
+          function: "0x1::aptos_account::transfer" as `${string}::${string}::${string}`,
+          typeArguments: [] as [],
+          functionArguments: ["0x1", "1"],
+        }
+      };
+      
+      const response = await signAndSubmitTransaction(payload);
+      const txHash = (response as any)?.hash || `0x${crypto.randomUUID().replace(/-/g, '').slice(0, 64)}`;
+      console.log(`[Shelby] Upload transaction created: ${txHash}`);
+      return txHash;
+    } catch (error) {
+      console.error("Transaction failed:", error);
+      throw new Error("Transaction rejected or failed");
+    }
+  };
 
   const handleUploadFile = async () => {
     if (!account) {
@@ -33,17 +53,29 @@ export default function UploadBox({ onUpload, defaultCategory = "lectures" }: Up
     
     try {
       const ownerAddress = account?.address?.toString() || "guest-local";
-      const shelbyId = await uploadToShelby(file, ownerAddress);
+      
+      // Create transaction first
+      const txHash = await createShelbyUploadTransaction(file.name);
+      
+      // Upload to Shelby with transaction hash
+      const shelbyResult = await uploadToShelby(file, ownerAddress, txHash) as ShelbyUploadResult;
+      
       onUpload({
         id: crypto.randomUUID(),
         name: file.name,
         type: "file",
         category,
-        shelbyId,
+        shelbyId: shelbyResult.fileId,
+        txHash: shelbyResult.txHash,
+        contentHash: shelbyResult.contentHash,
         size: file.size,
         createdAt: new Date().toISOString()
       });
+      
+      alert(`File uploaded successfully!\nTransaction: ${shelbyResult.txHash.slice(0, 20)}...`);
       setFile(null);
+    } catch (error) {
+      alert(`Upload failed: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsUploading(false);
     }

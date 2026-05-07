@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, FolderOpen, FileText, Settings, Bell, X, ChevronLeft, ChevronRight, LayoutDashboard, BarChart3 } from "lucide-react";
+import { Home, FolderOpen, FileText, Settings, Bell, X, ChevronLeft, ChevronRight, LayoutDashboard, BarChart3, Download } from "lucide-react";
 import ConnectWallet from "./ConnectWallet";
 import { clsx } from "clsx";
 
@@ -95,6 +95,21 @@ export default function Sidebar({
           >
             <FolderOpen className="w-5 h-5 shrink-0" />
             {!minimized && <span>Materials</span>}
+          </button>
+
+          <button 
+            onClick={() => { onTabChange("downloads"); onClose(); }}
+            title="Downloads"
+            className={clsx(
+              "flex items-center gap-3 px-4 py-3 w-full text-left rounded-2xl transition-all font-medium text-sm",
+              minimized && "justify-center px-0",
+              activeTab === "downloads" 
+                ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400" 
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+            )}
+          >
+            <Download className="w-5 h-5 shrink-0" />
+            {!minimized && <span>Downloads</span>}
           </button>
 
           <button 

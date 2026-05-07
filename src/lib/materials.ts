@@ -4,6 +4,8 @@ export type Material = {
   type: "file" | "link"
   category: "lectures" | "notes" | "assignments" | "links" | "general"
   shelbyId?: string
+  txHash?: string
+  contentHash?: string
   url?: string
   createdAt: string
   size?: number
