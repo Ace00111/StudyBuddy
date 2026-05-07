@@ -18,10 +18,11 @@ function LegendItem({ color, label, value, perc }: { color: string, label: strin
 
 interface HomeViewProps {
   materials?: Material[];
+  notesCount?: number;
   onExplore?: () => void;
 }
 
-export default function HomeView({ materials = [], onExplore }: HomeViewProps) {
+export default function HomeView({ materials = [], notesCount = 0, onExplore }: HomeViewProps) {
   const [privacy, setPrivacy] = useState({ stealthMode: false, hideActivity: false });
 
   useEffect(() => {
@@ -45,8 +46,9 @@ export default function HomeView({ materials = [], onExplore }: HomeViewProps) {
     others: materials.filter(m => m.type === "file" && !/\.(pdf|mp3|wav|m4a|mp4|mov|avi|png|jpg|jpeg|gif|svg)$/i.test(m.name)).length
   };
 
-  const total = materials.length || 1;
+  const total = materials.length + notesCount || 1;
   const segments = [
+    { color: '#22c55e', perc: (notesCount / total) * 100 },
     { color: '#3b82f6', perc: (stats.pdf / total) * 100 },
     { color: '#ec4899', perc: (stats.lectures / total) * 100 },
     { color: '#8b5cf6', perc: (stats.video / total) * 100 },
@@ -149,8 +151,7 @@ export default function HomeView({ materials = [], onExplore }: HomeViewProps) {
                </div>
              </div>
 
-             <div className="flex-1 w-full grid grid-cols-2 gap-3">
-                <LegendItem color="bg-blue-500" label="Notes" value={stats.pdf} perc={(stats.pdf/total)*100} />
+             <div className="flex-1 w-full grid grid-cols-2 gap-3">                <LegendItem color="bg-green-500" label="Notes" value={notesCount} perc={(notesCount/total)*100} />                <LegendItem color="bg-blue-500" label="Notes" value={stats.pdf} perc={(stats.pdf/total)*100} />
                 <LegendItem color="bg-pink-500" label="Audio" value={stats.lectures} perc={(stats.lectures/total)*100} />
                 <LegendItem color="bg-purple-500" label="Videos" value={stats.video} perc={(stats.video/total)*100} />
                 <LegendItem color="bg-yellow-500" label="Captures" value={stats.images} perc={(stats.images/total)*100} />

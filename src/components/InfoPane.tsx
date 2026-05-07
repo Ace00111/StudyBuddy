@@ -20,7 +20,20 @@ export default function InfoPane({ materials, notesCount, onClose }: InfoPanePro
 
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return [];
-    return materials.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 10);
+    return materials
+      .filter(m => 
+        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.category.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .sort((a, b) => {
+        // Prioritize exact name matches
+        const aNameMatch = a.name.toLowerCase().startsWith(searchQuery.toLowerCase());
+        const bNameMatch = b.name.toLowerCase().startsWith(searchQuery.toLowerCase());
+        if (aNameMatch && !bNameMatch) return -1;
+        if (!aNameMatch && bNameMatch) return 1;
+        return 0;
+      })
+      .slice(0, 15);
   }, [materials, searchQuery]);
 
   const handleSync = async () => {

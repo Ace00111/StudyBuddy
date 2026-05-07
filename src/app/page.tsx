@@ -25,29 +25,65 @@ interface Notification {
 export default function Home() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
+  const { signAndSubmitTransaction, connected, account } = useWallet();
 
-  // Initialize from LocalStorage (Shelby Protocol Mock)
+  // Get wallet-specific storage keys
+  const getWalletStorageKey = (key: string, walletAddress: string | null) => {
+    if (!walletAddress) return null;
+    return `studybuddy_${walletAddress}_${key}`;
+  };
+
+  // Initialize from Wallet-Specific LocalStorage
   useEffect(() => {
-    const savedMaterials = localStorage.getItem('studybuddy_materials');
-    if (savedMaterials) setMaterials(JSON.parse(savedMaterials));
+    const walletAddress = account?.address?.toString() || null;
     
-    const savedNotes = localStorage.getItem('studybuddy_notes');
-    if (savedNotes) {
-      setNotes(JSON.parse(savedNotes));
-    } else {
+    if (!walletAddress) {
+      // Guest mode - clear materials but keep default note
+      setMaterials([]);
       setNotes([{ id: 1, title: "Quantum Physics Summary", excerpt: "The main principles of quantum mechanics include...", content: "The main principles of quantum mechanics include superposition, entanglement, and the uncertainty principle.", date: "2 hours ago", color: 'blue', tags: ['Physics', 'Exams'] }]);
+      return;
     }
-  }, []);
 
-  // Persist to LocalStorage
+    // Wallet connected - load wallet-specific data
+    const materialsKey = getWalletStorageKey('materials', walletAddress);
+    const notesKey = getWalletStorageKey('notes', walletAddress);
+
+    if (materialsKey) {
+      const savedMaterials = localStorage.getItem(materialsKey);
+      setMaterials(savedMaterials ? JSON.parse(savedMaterials) : []);
+    }
+    
+    if (notesKey) {
+      const savedNotes = localStorage.getItem(notesKey);
+      if (savedNotes) {
+        setNotes(JSON.parse(savedNotes));
+      } else {
+        // New wallet - add default note
+        setNotes([{ id: 1, title: "Quantum Physics Summary", excerpt: "The main principles of quantum mechanics include...", content: "The main principles of quantum mechanics include superposition, entanglement, and the uncertainty principle.", date: "2 hours ago", color: 'blue', tags: ['Physics', 'Exams'] }]);
+      }
+    }
+  }, [account?.address]);
+
+  // Persist to Wallet-Specific LocalStorage
   useEffect(() => {
-    if (materials.length > 0) localStorage.setItem('studybuddy_materials', JSON.stringify(materials));
-  }, [materials]);
+    const walletAddress = account?.address?.toString() || null;
+    if (!walletAddress) return;
+
+    const materialsKey = getWalletStorageKey('materials', walletAddress);
+    if (materialsKey && materials.length > 0) {
+      localStorage.setItem(materialsKey, JSON.stringify(materials));
+    }
+  }, [materials, account?.address]);
 
   useEffect(() => {
-    if (notes.length > 0) localStorage.setItem('studybuddy_notes', JSON.stringify(notes));
-  }, [notes]);
-  const { signAndSubmitTransaction, connected } = useWallet();
+    const walletAddress = account?.address?.toString() || null;
+    if (!walletAddress) return;
+
+    const notesKey = getWalletStorageKey('notes', walletAddress);
+    if (notesKey && notes.length > 0) {
+      localStorage.setItem(notesKey, JSON.stringify(notes));
+    }
+  }, [notes, account?.address]);
 
   const [activeMaterial, setActiveMaterial] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -238,7 +274,7 @@ export default function Home() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {activeTab === "home" && <div className="animate-in fade-in zoom-in-95 duration-700 h-full"><HomeView materials={materials} onExplore={() => setActiveTab("materials")} /></div>}
+          {activeTab === "home" && <div className="animate-in fade-in zoom-in-95 duration-700 h-full"><HomeView materials={materials} notesCount={notes.length} onExplore={() => setActiveTab("materials")} /></div>}
           {activeTab === "materials" && <div className="animate-in fade-in slide-in-from-right-8 duration-700"><MaterialsView materials={materials} onUpload={handleUpload} onDelete={(id) => setMaterials(m => m.filter(x => x.id !== id))} activeMaterial={activeMaterial} setActiveMaterial={setActiveMaterial} selectedCategory={activeCategory} /></div>}
           {activeTab === "downloads" && <div className="animate-in fade-in slide-in-from-bottom-8 duration-700"><DownloadsView materials={materials} signAndSubmitTransaction={signAndSubmitTransaction} /></div>}
           {activeTab === "settings" && <div className="animate-in fade-in duration-500"><SettingsView /></div>}
