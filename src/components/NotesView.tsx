@@ -2,6 +2,7 @@
 
 import { Search, Plus, FileText, Clock, X, Edit3, Trash2, Tag, Palette } from "lucide-react";
 import { useState } from "react";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 const COLORS = [
   { id: 'blue', bg: 'bg-blue-500', border: 'border-blue-500', light: 'bg-blue-50', dark: 'dark:bg-blue-500/10', text: 'text-blue-600' },
@@ -19,6 +20,7 @@ interface NotesViewProps {
 }
 
 export default function NotesView({ sharedNotes, setSharedNotes }: NotesViewProps) {
+  const { account } = useWallet();
   const [isAdding, setIsAdding] = useState(false);
   const [editingNote, setEditingNote] = useState<any>(null);
   const [newTitle, setNewTitle] = useState("");
@@ -30,6 +32,10 @@ export default function NotesView({ sharedNotes, setSharedNotes }: NotesViewProp
 
   const handleAddNote = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!account) {
+      alert("Please connect your wallet to create notes.");
+      return;
+    }
     if (!newTitle || !newContent) return;
 
     if (editingNote) {
@@ -116,8 +122,15 @@ export default function NotesView({ sharedNotes, setSharedNotes }: NotesViewProp
           </div>
           {!isAdding && (
             <button 
-              onClick={() => setIsAdding(true)}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl text-sm font-black uppercase tracking-tighter hover:scale-105 transition-all shadow-xl shadow-primary/20"
+              onClick={() => {
+                if (!account) {
+                  alert("Please connect your wallet to create notes.");
+                  return;
+                }
+                setIsAdding(true);
+              }}
+              disabled={!account}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl text-sm font-black uppercase tracking-tighter hover:scale-105 transition-all shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4" />
               New Note

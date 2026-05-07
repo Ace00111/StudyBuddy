@@ -14,6 +14,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
+    // Force dark mode by setting class on document
+    document.documentElement.classList.add('dark');
   }, []);
 
   // Return children without ThemeProvider during SSR to prevent hydration script errors
@@ -26,7 +28,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} forcedTheme="dark">
       <AptosWalletAdapterProvider autoConnect={false}>
         {children}
       </AptosWalletAdapterProvider>

@@ -9,8 +9,7 @@ import SettingsView from "@/components/SettingsView";
 import NotesView from "@/components/NotesView";
 import NotificationsView from "@/components/NotificationsView";
 import { Material } from "@/lib/materials";
-import { useTheme } from "next-themes";
-import { Moon, Sun, Sidebar as SidebarIcon, Menu, MousePointer2, LayoutDashboard } from "lucide-react";
+import { Sidebar as SidebarIcon, Menu, MousePointer2, LayoutDashboard } from "lucide-react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 interface Notification {
@@ -61,7 +60,6 @@ export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
   const [headerProfile, setHeaderProfile] = useState({ name: "Guest Scholar", avatar: "" });
-  const { theme, setTheme } = useTheme();
 
   // Profile Persistence & Dummy Logic
   useEffect(() => {
@@ -222,9 +220,6 @@ export default function Home() {
           </div>
           
           <div className="flex items-center gap-2 md:gap-4">
-            <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="p-2.5 text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all border border-border bg-white dark:bg-slate-900 shadow-sm">
-              {theme === "dark" ? <Sun className="w-5 h-5 text-yellow-500" /> : <Moon className="w-5 h-5 text-indigo-500" />}
-            </button>
             <button onClick={() => setIsInfoPaneOpen(!isInfoPaneOpen)} className={`p-2.5 rounded-xl transition-all border shadow-sm ${isInfoPaneOpen ? "text-primary bg-primary/10 border-primary/20" : "text-foreground bg-white dark:bg-slate-900 border-border hover:bg-slate-100 dark:hover:bg-slate-800"} hidden md:flex`}>
               <SidebarIcon className="w-5 h-5" />
             </button>
