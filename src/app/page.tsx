@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import InfoPane from "@/components/InfoPane";
 import HomeView from "@/components/HomeView";
@@ -12,6 +12,7 @@ import DownloadsView from "@/components/DownloadsView";
 import { Material } from "@/lib/materials";
 import { Sidebar as SidebarIcon, Menu, MousePointer2, LayoutDashboard } from "lucide-react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { loadWalletData, saveWalletMaterials, saveWalletNotes, loadWalletProfile, saveWalletProfile } from "@/lib/walletStorage";
 
 interface Notification {
   id: number;
@@ -27,63 +28,64 @@ export default function Home() {
   const [notes, setNotes] = useState<any[]>([]);
   const { signAndSubmitTransaction, connected, account } = useWallet();
 
-  // Get wallet-specific storage keys
-  const getWalletStorageKey = (key: string, walletAddress: string | null) => {
-    if (!walletAddress) return null;
-    return `studybuddy_${walletAddress}_${key}`;
-  };
+  // Track the previous wallet address so we know when it changes
+  const prevWalletRef = useRef<string | null>(null);
 
-  // Initialize from Wallet-Specific LocalStorage
+  const [headerProfile, setHeaderProfile] = useState({ name: "Guest Scholar", email: "", avatar: "" });
+
+  // ---------- Wallet-aware data loading ----------
+  // Runs whenever the connected wallet changes (including disconnect → null)
   useEffect(() => {
-    const walletAddress = account?.address?.toString() || null;
-    
+    const walletAddress = account?.address?.toString() ?? null;
+
+    // Skip if the wallet hasn't actually changed
+    if (walletAddress === prevWalletRef.current) return;
+    prevWalletRef.current = walletAddress;
+
+    // Clear all data when wallet disconnects
     if (!walletAddress) {
-      // Guest mode - clear materials but keep default note
       setMaterials([]);
-      setNotes([{ id: 1, title: "Quantum Physics Summary", excerpt: "The main principles of quantum mechanics include...", content: "The main principles of quantum mechanics include superposition, entanglement, and the uncertainty principle.", date: "2 hours ago", color: 'blue', tags: ['Physics', 'Exams'] }]);
+      setNotes([]);
+      setHeaderProfile({ name: "Guest Scholar", email: "", avatar: "" });
       return;
     }
 
-    // Wallet connected - load wallet-specific data
-    const materialsKey = getWalletStorageKey('materials', walletAddress);
-    const notesKey = getWalletStorageKey('notes', walletAddress);
+    // Load data for the new wallet address only
+    const { materials: m, notes: n } = loadWalletData(walletAddress);
+    setMaterials(m);
+    setNotes(n);
 
-    if (materialsKey) {
-      const savedMaterials = localStorage.getItem(materialsKey);
-      setMaterials(savedMaterials ? JSON.parse(savedMaterials) : []);
+    // Update profile display for this wallet
+    const savedProfile = loadWalletProfile(walletAddress);
+    if (savedProfile) {
+      setHeaderProfile(savedProfile);
+    } else {
+      setHeaderProfile({ name: "New Scholar", email: "", avatar: "" });
     }
-    
-    if (notesKey) {
-      const savedNotes = localStorage.getItem(notesKey);
-      if (savedNotes) {
-        setNotes(JSON.parse(savedNotes));
-      } else {
-        // New wallet - add default note
-        setNotes([{ id: 1, title: "Quantum Physics Summary", excerpt: "The main principles of quantum mechanics include...", content: "The main principles of quantum mechanics include superposition, entanglement, and the uncertainty principle.", date: "2 hours ago", color: 'blue', tags: ['Physics', 'Exams'] }]);
-      }
-    }
-  }, [account?.address]);
+  }, [account?.address, connected]);
 
-  // Persist to Wallet-Specific LocalStorage
+  // ---------- Persist materials & notes whenever they change (only for connected wallets) ----------
   useEffect(() => {
-    const walletAddress = account?.address?.toString() || null;
-    if (!walletAddress) return;
-
-    const materialsKey = getWalletStorageKey('materials', walletAddress);
-    if (materialsKey && materials.length > 0) {
-      localStorage.setItem(materialsKey, JSON.stringify(materials));
+    const walletAddress = account?.address?.toString() ?? null;
+    if (walletAddress) {
+      saveWalletMaterials(walletAddress, materials);
     }
   }, [materials, account?.address]);
 
   useEffect(() => {
-    const walletAddress = account?.address?.toString() || null;
-    if (!walletAddress) return;
-
-    const notesKey = getWalletStorageKey('notes', walletAddress);
-    if (notesKey && notes.length > 0) {
-      localStorage.setItem(notesKey, JSON.stringify(notes));
+    const walletAddress = account?.address?.toString() ?? null;
+    if (walletAddress) {
+      saveWalletNotes(walletAddress, notes);
     }
   }, [notes, account?.address]);
+
+  // ---------- Persist profile whenever it changes (only for connected wallets) ----------
+  useEffect(() => {
+    const walletAddress = account?.address?.toString() ?? null;
+    if (walletAddress) {
+      saveWalletProfile(walletAddress, headerProfile);
+    }
+  }, [headerProfile, account?.address]);
 
   const [activeMaterial, setActiveMaterial] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -96,26 +98,6 @@ export default function Home() {
   const [isInfoPaneOpen, setIsInfoPaneOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
-  const [headerProfile, setHeaderProfile] = useState({ name: "Guest Scholar", avatar: "" });
-
-  // Profile Persistence & Dummy Logic
-  useEffect(() => {
-    const updateHeader = () => {
-      if (!connected) {
-        setHeaderProfile({ name: "Guest Scholar", avatar: "" });
-        return;
-      }
-      const saved = localStorage.getItem('studybuddy_profile');
-      if (saved) {
-        setHeaderProfile(JSON.parse(saved));
-      } else {
-        setHeaderProfile({ name: "New Scholar", avatar: "" });
-      }
-    };
-    updateHeader();
-    window.addEventListener('studybuddy_profile_updated', updateHeader);
-    return () => window.removeEventListener('studybuddy_profile_updated', updateHeader);
-  }, [connected]);
 
   // Sidebar Auto-Minimize Logic (5s)
   useEffect(() => {
@@ -244,7 +226,7 @@ export default function Home() {
       <main className="flex-1 flex flex-col h-screen overflow-y-auto relative z-10 custom-scrollbar">
         <div className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-4">
-            <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl lg:hidden">
+            <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl lg:hidden" aria-label="Open sidebar">
               <Menu className="w-6 h-6" />
             </button>
             <div className="flex items-center gap-3 text-sm text-muted font-medium">
@@ -257,13 +239,13 @@ export default function Home() {
           </div>
           
           <div className="flex items-center gap-2 md:gap-4">
-            <button onClick={() => setIsInfoPaneOpen(!isInfoPaneOpen)} className={`p-2.5 rounded-xl transition-all border shadow-sm ${isInfoPaneOpen ? "text-primary bg-primary/10 border-primary/20" : "text-foreground bg-white dark:bg-slate-900 border-border hover:bg-slate-100 dark:hover:bg-slate-800"} hidden md:flex`}>
+            <button onClick={() => setIsInfoPaneOpen(!isInfoPaneOpen)} className={`p-2.5 rounded-xl transition-all border shadow-sm ${isInfoPaneOpen ? "text-primary bg-primary/10 border-primary/20" : "text-foreground bg-white dark:bg-slate-900 border-border hover:bg-slate-100 dark:hover:bg-slate-800"} hidden md:flex`} aria-label="Toggle info pane">
               <SidebarIcon className="w-5 h-5" />
             </button>
 
             <div onClick={() => setActiveTab("settings")} className="flex items-center gap-3 pl-2 pr-4 py-1.5 bg-white dark:bg-slate-900 border border-border rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm group">
                <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-primary/20 overflow-hidden ring-2 ring-white dark:ring-slate-800 group-hover:scale-110 transition-transform">
-                  {headerProfile.avatar ? <img src={headerProfile.avatar} className="w-full h-full object-cover" /> : headerProfile.name.charAt(0)}
+                  {headerProfile.avatar ? <img src={headerProfile.avatar} className="w-full h-full object-cover" alt="Profile avatar" /> : headerProfile.name.charAt(0)}
                </div>
                <div className="hidden sm:block">
                   <p className="text-[10px] font-black uppercase tracking-tighter leading-none text-foreground">{headerProfile.name}</p>
@@ -284,7 +266,7 @@ export default function Home() {
       </main>
 
       {!isInfoPaneOpen && (
-        <button onClick={() => setIsInfoPaneOpen(true)} className="fixed right-0 top-1/2 -translate-y-1/2 w-2 h-20 bg-primary/20 hover:w-4 hover:bg-primary/40 rounded-l-full transition-all z-30" />
+        <button onClick={() => setIsInfoPaneOpen(true)} className="fixed right-0 top-1/2 -translate-y-1/2 w-2 h-20 bg-primary/20 hover:w-4 hover:bg-primary/40 rounded-l-full transition-all z-30" aria-label="Open info pane" />
       )}
 
       {isInfoPaneOpen && (

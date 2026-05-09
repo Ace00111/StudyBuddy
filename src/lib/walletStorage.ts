@@ -1,12 +1,15 @@
 import { Material } from "./materials";
 
-/** Build a namespaced localStorage key scoped to a wallet address (or "guest"). */
+/** Build a namespaced localStorage key scoped to a specific wallet address only. */
 export function getStorageKey(
   scope: "materials" | "notes" | "profile" | "settings",
-  walletAddress: string | null
+  walletAddress: string
 ): string {
-  const owner = walletAddress ? walletAddress : "guest";
-  return `studybuddy_${scope}_${owner}`;
+  // Only create keys for valid wallet addresses - no guest fallback
+  if (!walletAddress || walletAddress === "guest") {
+    throw new Error("Wallet address required for storage operations");
+  }
+  return `studybuddy_wallet_${walletAddress}_${scope}`;
 }
 
 export interface WalletData {
@@ -14,9 +17,11 @@ export interface WalletData {
   notes: any[];
 }
 
-/** Load materials + notes that belong to this wallet (or guest). */
-export function loadWalletData(walletAddress: string | null): WalletData {
-  if (typeof window === "undefined") return { materials: [], notes: [] };
+/** Load materials + notes that belong to this specific wallet address only. */
+export function loadWalletData(walletAddress: string): WalletData {
+  if (typeof window === "undefined" || !walletAddress || walletAddress === "guest") {
+    return { materials: [], notes: [] };
+  }
 
   let materials: Material[] = [];
   let notes: any[] = [];
@@ -31,7 +36,7 @@ export function loadWalletData(walletAddress: string | null): WalletData {
     if (rawNotes) {
       notes = JSON.parse(rawNotes);
     } else {
-      // Default sample note for every new user (guest or any wallet)
+      // Default sample note for this specific wallet only
       notes = [
         {
           id: 1,
@@ -50,12 +55,12 @@ export function loadWalletData(walletAddress: string | null): WalletData {
   return { materials, notes };
 }
 
-/** Persist materials + notes for a wallet (or guest). */
+/** Persist materials + notes for a specific wallet address only. */
 export function saveWalletMaterials(
-  walletAddress: string | null,
+  walletAddress: string,
   materials: Material[]
 ): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !walletAddress || walletAddress === "guest") return;
   localStorage.setItem(
     getStorageKey("materials", walletAddress),
     JSON.stringify(materials)
@@ -63,19 +68,19 @@ export function saveWalletMaterials(
 }
 
 export function saveWalletNotes(
-  walletAddress: string | null,
+  walletAddress: string,
   notes: any[]
 ): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !walletAddress || walletAddress === "guest") return;
   localStorage.setItem(
     getStorageKey("notes", walletAddress),
     JSON.stringify(notes)
   );
 }
 
-/** Load profile for a wallet (or guest). */
-export function loadWalletProfile(walletAddress: string | null) {
-  if (typeof window === "undefined") return null;
+/** Load profile for a specific wallet address only. */
+export function loadWalletProfile(walletAddress: string) {
+  if (typeof window === "undefined" || !walletAddress || walletAddress === "guest") return null;
   try {
     const raw = localStorage.getItem(getStorageKey("profile", walletAddress));
     return raw ? JSON.parse(raw) : null;
@@ -84,20 +89,20 @@ export function loadWalletProfile(walletAddress: string | null) {
   }
 }
 
-/** Persist profile for a wallet. */
+/** Persist profile for a specific wallet address only. */
 export function saveWalletProfile(
-  walletAddress: string | null,
+  walletAddress: string,
   profile: { name: string; email: string; avatar: string }
 ): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !walletAddress || walletAddress === "guest") return;
   localStorage.setItem(
     getStorageKey("profile", walletAddress),
     JSON.stringify(profile)
   );
 }
 
-/** Load settings for a wallet. */
-export function loadWalletSettings(walletAddress: string | null) {
+/** Load settings for a specific wallet address only. */
+export function loadWalletSettings(walletAddress: string) {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(getStorageKey("settings", walletAddress));
@@ -109,7 +114,7 @@ export function loadWalletSettings(walletAddress: string | null) {
 
 /** Persist settings for a wallet. */
 export function saveWalletSettings(walletAddress: string | null, settings: any): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !walletAddress) return;
   localStorage.setItem(
     getStorageKey("settings", walletAddress),
     JSON.stringify(settings)

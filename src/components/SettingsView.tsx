@@ -4,6 +4,25 @@ import { User, Bell, Shield, Wallet, Laptop, Moon, Sun, Camera, Check, X, Edit3,
 import { useState, useEffect } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient } from "aptos";
+import { loadWalletProfile, saveWalletProfile } from "@/lib/walletStorage";
+
+// Wallet-specific settings functions
+const getWalletSettingsKey = (walletAddress: string) => `studybuddy_wallet_${walletAddress}_settings`;
+
+const loadWalletSettings = (walletAddress: string) => {
+  if (typeof window === "undefined" || !walletAddress) return null;
+  try {
+    const raw = localStorage.getItem(getWalletSettingsKey(walletAddress));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveWalletSettings = (walletAddress: string, settings: any) => {
+  if (typeof window === "undefined" || !walletAddress) return;
+  localStorage.setItem(getWalletSettingsKey(walletAddress), JSON.stringify(settings));
+};
 
 const NODE_URL = "https://fullnode.mainnet.aptoslabs.com";
 const client = new AptosClient(NODE_URL);
@@ -27,24 +46,33 @@ export default function SettingsView() {
     privacy: { stealthMode: false, encryptedPreviews: true, hideActivity: false, incognitoSync: false }
   });
 
-  // Load from localStorage & Handle Dummy Logic
+  // Load from wallet-specific localStorage
   useEffect(() => {
-    if (!connected) {
+    if (!connected || !account?.address) {
       const dummy = { name: "Guest Scholar", email: "guest@studybuddy.io", avatar: "" };
       setProfile(dummy);
       setTempProfile(dummy);
       return;
     }
 
-    const savedProfile = localStorage.getItem('studybuddy_profile');
+    const walletAddress = account.address.toString();
+    const savedProfile = loadWalletProfile(walletAddress);
     if (savedProfile) {
-      const p = JSON.parse(savedProfile);
-      setProfile(p);
-      setTempProfile(p);
+      setProfile(savedProfile);
+      setTempProfile(savedProfile);
+    } else {
+      // New wallet - set default profile
+      const defaultProfile = { name: "New Scholar", email: "", avatar: "" };
+      setProfile(defaultProfile);
+      setTempProfile(defaultProfile);
     }
-    const savedSettings = localStorage.getItem('studybuddy_settings');
-    if (savedSettings) setToggles(JSON.parse(savedSettings));
-  }, [connected]);
+
+    // Load wallet-specific settings
+    const savedSettings = loadWalletSettings(walletAddress);
+    if (savedSettings) {
+      setToggles(savedSettings);
+    }
+  }, [connected, account?.address]);
 
   // Fetch Balance
   useEffect(() => {
@@ -66,8 +94,11 @@ export default function SettingsView() {
   }, [connected, account]);
 
   const handleSave = async () => {
+    if (!account?.address) return;
+
+    const walletAddress = account.address.toString();
     setProfile(tempProfile);
-    localStorage.setItem('studybuddy_profile', JSON.stringify(tempProfile));
+    saveWalletProfile(walletAddress, tempProfile);
     
     // Sync with database
     try {
@@ -99,6 +130,9 @@ export default function SettingsView() {
   };
 
   const handleToggle = (section: keyof typeof toggles, key: string) => {
+    if (!account?.address) return;
+
+    const walletAddress = account.address.toString();
     const newToggles = {
       ...toggles,
       [section]: {
@@ -107,7 +141,7 @@ export default function SettingsView() {
       }
     };
     setToggles(newToggles);
-    localStorage.setItem('studybuddy_settings', JSON.stringify(newToggles));
+    saveWalletSettings(walletAddress, newToggles);
     window.dispatchEvent(new Event('studybuddy_settings_updated'));
   };
 
@@ -175,6 +209,7 @@ export default function SettingsView() {
                                 className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-transparent focus:border-primary outline-none font-bold"
                                 value={tempProfile.name}
                                 onChange={(e) => setTempProfile({ ...tempProfile, name: e.target.value })}
+                                placeholder="Enter your full name"
                               />
                             </div>
                             <div>
@@ -184,6 +219,7 @@ export default function SettingsView() {
                                 className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-transparent focus:border-primary outline-none"
                                 value={tempProfile.email}
                                 onChange={(e) => setTempProfile({ ...tempProfile, email: e.target.value })}
+                                placeholder="Enter your email address"
                               />
                             </div>
                           </div>
@@ -195,6 +231,7 @@ export default function SettingsView() {
                                      <button 
                                        onClick={() => setTempProfile({ ...tempProfile, avatar: "" })}
                                        className="p-3 bg-red-500 text-white rounded-2xl hover:scale-110 transition-transform shadow-xl"
+                                       aria-label="Remove avatar"
                                      >
                                         <X className="w-5 h-5" />
                                      </button>
@@ -209,7 +246,7 @@ export default function SettingsView() {
                                   <span className="px-4 py-1.5 bg-primary text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">Upload Photo</span>
                                </div>
                              )}
-                             {!tempProfile.avatar && <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer z-20" />}
+                             {!tempProfile.avatar && <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer z-20" aria-label="Upload avatar" />}
                           </div>
                           
                           <div className="mt-4 p-5 bg-primary/5 border border-primary/10 rounded-[32px] flex items-center justify-between">
@@ -233,7 +270,7 @@ export default function SettingsView() {
                   ) : (
                     <div className="flex items-center gap-10 p-10 rounded-[48px] bg-slate-50/50 dark:bg-slate-800/30 border border-border">
                       <div className="w-28 h-28 rounded-[36px] bg-primary flex items-center justify-center text-4xl font-black text-white shadow-2xl shadow-primary/30 overflow-hidden">
-                        {profile.avatar ? <img src={profile.avatar} className="w-full h-full object-cover" /> : profile.name.charAt(0)}
+                        {profile.avatar ? <img src={profile.avatar} className="w-full h-full object-cover" alt="Profile avatar" /> : profile.name.charAt(0)}
                       </div>
                       <div className="flex-1">
                         <p className="font-black text-3xl tracking-tighter text-foreground">{profile.name}</p>
@@ -299,7 +336,7 @@ export default function SettingsView() {
                               <p className="text-xs text-muted font-medium">{item.desc}</p>
                            </div>
                         </div>
-                        <button onClick={() => handleToggle('privacy', item.key)} className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all ${ (toggles.privacy as any)[item.key] ? "bg-primary" : "bg-slate-300 dark:bg-slate-700" }`}>
+                        <button onClick={() => handleToggle('privacy', item.key)} className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all ${ (toggles.privacy as any)[item.key] ? "bg-primary" : "bg-slate-300 dark:bg-slate-700" }`} aria-label={`Toggle ${item.label}`}>
                           <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${ (toggles.privacy as any)[item.key] ? "translate-x-7" : "translate-x-1" }`} />
                         </button>
                       </div>
@@ -335,6 +372,7 @@ export default function SettingsView() {
                           className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all ${
                             (toggles.notifications as any)[item.key] ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"
                           }`}
+                          aria-label={`Toggle ${item.label}`}
                         >
                           <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${
                             (toggles.notifications as any)[item.key] ? "translate-x-7" : "translate-x-1"
