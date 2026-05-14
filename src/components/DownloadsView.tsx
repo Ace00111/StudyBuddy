@@ -4,38 +4,17 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Material } from "@/lib/materials";
 import { Download, File as FileIcon, Loader, FolderIcon } from "lucide-react";
 import { useState } from "react";
-import { downloadFromShelby, type ShelbyDownloadResult } from "@/lib/shelby";
+import { downloadFromShelby } from "@/lib/shelby";
 
 interface DownloadsViewProps {
   materials: Material[];
-  signAndSubmitTransaction: any;
 }
 
-export default function DownloadsView({ materials, signAndSubmitTransaction }: DownloadsViewProps) {
+export default function DownloadsView({ materials }: DownloadsViewProps) {
   const { account } = useWallet();
   const [downloading, setDownloading] = useState<string | null>(null);
 
   const filesMaterials = materials.filter(m => m.type === "file" && m.shelbyId);
-
-  const createDownloadTransaction = async (fileName: string) => {
-    try {
-      const payload = {
-        data: {
-          function: "0x1::aptos_account::transfer" as `${string}::${string}::${string}`,
-          typeArguments: [] as [],
-          functionArguments: ["0x1", "1"],
-        }
-      };
-      
-      const response = await signAndSubmitTransaction(payload);
-      const txHash = (response as any)?.hash || `0x${crypto.randomUUID().replace(/-/g, '').slice(0, 64)}`;
-      console.log(`[Shelby] Download transaction created: ${txHash}`);
-      return txHash;
-    } catch (error) {
-      console.error("Transaction failed:", error);
-      throw new Error("Transaction rejected or failed");
-    }
-  };
 
   const handleDownload = async (material: Material) => {
     if (!account || !material.shelbyId) {
@@ -45,15 +24,11 @@ export default function DownloadsView({ materials, signAndSubmitTransaction }: D
 
     setDownloading(material.id);
     try {
-      // Create transaction first
-      const txHash = await createDownloadTransaction(material.name);
-
-      // Download from Shelby
+      // Download from Shelby using official SDK integration
       const downloadResult = await downloadFromShelby(
         material.shelbyId,
-        account.address.toString(),
-        txHash
-      ) as ShelbyDownloadResult;
+        account.address.toString()
+      );
 
       // Create blob URL and trigger download
       const url = window.URL.createObjectURL(downloadResult.fileData);
@@ -65,7 +40,7 @@ export default function DownloadsView({ materials, signAndSubmitTransaction }: D
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      alert(`File downloaded successfully!\nTransaction: ${downloadResult.txHash.slice(0, 20)}...`);
+      console.log(`[Shelby] File downloaded successfully: ${material.name}`);
     } catch (error) {
       alert(`Download failed: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
@@ -102,11 +77,11 @@ export default function DownloadsView({ materials, signAndSubmitTransaction }: D
                     <p className="font-bold text-foreground truncate">{material.name}</p>
                     <div className="flex items-center gap-2 mt-1 text-[10px] text-muted">
                       <span className="uppercase font-black tracking-wider">{material.category}</span>
-                      {material.txHash && (
+                      {material.shelbyId && (
                         <>
                           <span>•</span>
-                          <span className="font-mono truncate" title={material.txHash}>
-                            TX: {material.txHash.slice(0, 12)}...
+                          <span className="font-mono truncate" title={material.shelbyId}>
+                            ID: {material.shelbyId.slice(0, 15)}...
                           </span>
                         </>
                       )}

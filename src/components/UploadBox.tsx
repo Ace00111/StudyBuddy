@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { uploadToShelby, type ShelbyUploadResult } from "@/lib/shelby";
+import { useUploadBlobs, type WalletAdapterSigner } from "@shelby-protocol/react";
 import { Upload, Link as LinkIcon, AlertCircle } from "lucide-react";
 import { Material } from "@/lib/materials";
 
@@ -12,36 +12,25 @@ interface UploadBoxProps {
 }
 
 export default function UploadBox({ onUpload, defaultCategory = "lectures" }: UploadBoxProps) {
-  const { account, signAndSubmitTransaction } = useWallet();
+  const wallet = useWallet();
+  const { account } = wallet;
   const [file, setFile] = useState<File | null>(null);
   const [link, setLink] = useState("");
   const [category, setCategory] = useState<Material["category"]>(defaultCategory);
-  const [isUploading, setIsUploading] = useState(false);
 
-  // Sync category state with prop when it changes (e.g. user clicks sidebar sub-link)
+  const uploadBlobs = useUploadBlobs({
+    onSuccess: () => {
+      console.log("[Shelby] Upload successful");
+    },
+    onError: (error) => {
+      console.error("[Shelby] Upload failed:", error);
+      alert(`Upload failed: ${error.message}`);
+    }
+  });
+
   useEffect(() => {
     setCategory(defaultCategory);
   }, [defaultCategory]);
-
-  const createShelbyUploadTransaction = async (fileName: string) => {
-    try {
-      const payload = {
-        data: {
-          function: "0x1::aptos_account::transfer" as `${string}::${string}::${string}`,
-          typeArguments: [] as [],
-          functionArguments: ["0x1", "1"],
-        }
-      };
-      
-      const response = await signAndSubmitTransaction(payload);
-      const txHash = (response as any)?.hash || `0x${crypto.randomUUID().replace(/-/g, '').slice(0, 64)}`;
-      console.log(`[Shelby] Upload transaction created: ${txHash}`);
-      return txHash;
-    } catch (error) {
-      console.error("Transaction failed:", error);
-      throw new Error("Transaction rejected or failed");
-    }
-  };
 
   const handleUploadFile = async () => {
     if (!account) {
@@ -49,35 +38,42 @@ export default function UploadBox({ onUpload, defaultCategory = "lectures" }: Up
       return;
     }
     if (!file) return;
-    setIsUploading(true);
-    
+
     try {
-      const ownerAddress = account?.address?.toString() || "guest-local";
+      const buffer = await file.arrayBuffer();
+      const blobData = new Uint8Array(buffer);
       
-      // Create transaction first
-      const txHash = await createShelbyUploadTransaction(file.name);
-      
-      // Upload to Shelby with transaction hash
-      const shelbyResult = await uploadToShelby(file, ownerAddress, txHash) as ShelbyUploadResult;
-      
-      onUpload({
-        id: crypto.randomUUID(),
-        name: file.name,
-        type: "file",
-        category,
-        shelbyId: shelbyResult.fileId,
-        txHash: shelbyResult.txHash,
-        contentHash: shelbyResult.contentHash,
-        size: file.size,
-        createdAt: new Date().toISOString()
+      // Expiration: 1 year from now in microseconds
+      const expirationMicros = (Date.now() + 365 * 24 * 60 * 60 * 1000) * 1000;
+
+      uploadBlobs.mutate({
+        signer: wallet as WalletAdapterSigner,
+        blobs: [
+          {
+            blobName: `${account.address}/${file.name}`,
+            blobData,
+          }
+        ],
+        expirationMicros,
+      }, {
+        onSuccess: () => {
+          onUpload({
+            id: crypto.randomUUID(),
+            name: file.name,
+            type: "file",
+            category,
+            shelbyId: `${account.address}/${file.name}`,
+            size: file.size,
+            createdAt: new Date().toISOString()
+          });
+          
+          alert(`File uploaded successfully!`);
+          setFile(null);
+        }
       });
       
-      alert(`File uploaded successfully!\nTransaction: ${shelbyResult.txHash.slice(0, 20)}...`);
-      setFile(null);
     } catch (error) {
-      alert(`Upload failed: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsUploading(false);
+      alert(`Upload preparation failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -147,10 +143,10 @@ export default function UploadBox({ onUpload, defaultCategory = "lectures" }: Up
           </div>
           <button 
             onClick={handleUploadFile}
-            disabled={!file || isUploading || !account}
+            disabled={!file || uploadBlobs.isPending || !account}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
           >
-            {isUploading ? "Uploading..." : "Upload"}
+            {uploadBlobs.isPending ? "Uploading..." : "Upload"}
           </button>
         </div>
 
