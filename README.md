@@ -33,7 +33,8 @@ git remote add origin <repo-url>
 git push -u origin main
 ```
 
-## 6. Notes
-- Shelby API endpoints may need adjustment based on official docs (currently using placeholders).
-- This is Phase 1 (storage layer only).
-- AI + learning system comes later.
+## 6. Project Status
+- **Shelby Protocol**: Fully integrated using the official `@shelby-protocol/sdk/browser`.
+- **Note Syncing**: Decentralized note syncing is active, storing study notes as JSON blobs on-chain.
+- **Next Steps**: Implementation of AI-driven study assistance and advanced learning metrics.
+

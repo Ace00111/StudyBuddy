@@ -1,8 +1,23 @@
-import { ShelbyClient } from "@shelby-protocol/sdk";
+import { ShelbyClient } from "@shelby-protocol/sdk/browser";
+
 import { Network } from "@aptos-labs/ts-sdk";
 
-// Initialize the Shelby Client with testnet configuration
-// Note: In a production app, these should come from environment variables
+const nodeUrl = process.env.NEXT_PUBLIC_APTOS_NODE_URL || "https://fullnode.testnet.aptoslabs.com";
+const envNetwork = process.env.NEXT_PUBLIC_NETWORK?.toLowerCase();
+
+let network: Network;
+if (envNetwork === "mainnet") {
+  network = Network.MAINNET;
+} else if (envNetwork === "testnet") {
+  network = Network.TESTNET;
+} else {
+  network = nodeUrl.includes("mainnet") ? Network.MAINNET : Network.TESTNET;
+}
+
+// Initialize the Shelby Client with configuration from environment variables
 export const shelbyClient = new ShelbyClient({
-  network: Network.TESTNET,
-});
+  network,
+  fullnode: nodeUrl,
+} as any);
+
+

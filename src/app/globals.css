@@ -1,32 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;700;900&display=swap');
 @import "tailwindcss";
 
-/* THEME SYSTEM */
-:root {
-  /* LIGHT THEME */
-  --background: #f8fafc; /* slate-50 */
-  --foreground: #0f172a; /* slate-900 */
-  --card-bg: #ffffff;
-  --border: #e2e8f0; /* slate-200 */
-  --primary: #2563eb; /* blue-600 */
-  --header-bg: #ffffff;
-  --sidebar-bg: #ffffff;
-  --muted: #64748b; /* slate-500 */
-}
 
-.dark {
-  /* DARK THEME */
-  --background: #020617; /* slate-950 */
-  --foreground: #f1f5f9; /* slate-100 */
-  --card-bg: #0f172a; /* slate-900 */
-  --border: #1e293b; /* slate-800 */
-  --primary: #3b82f6; /* blue-500 */
+/* THEME SYSTEM - PERMANENT DARK MODE */
+:root {
+  --background: #020617; /* Deep Navy */
+  --foreground: #f1f5f9; /* Slate 100 */
+  --card-bg: #0a0c14; /* Midnight Navy */
+  --border: #1e293b; /* Slate 800 */
+  --primary: #3b82f6; /* Blue 500 */
   --header-bg: #020617;
   --sidebar-bg: #020617;
-  --muted: #94a3b8; /* slate-400 */
+  --muted: #94a3b8; /* Slate 400 */
 }
 
-
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card-bg);
@@ -35,8 +23,10 @@
   --color-header: var(--header-bg);
   --color-sidebar: var(--sidebar-bg);
   --color-muted: var(--muted);
-  --font-sans: "Inter", "Outfit", var(--font-geist-sans), system-ui, sans-serif;
+  --font-sans: "Inter", "Outfit", system-ui, sans-serif;
+  --font-serif: "Instrument Serif", "Playfair Display", serif;
 }
+
 
 html,
 body {
@@ -49,7 +39,21 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-
 * {
   border-color: var(--border);
+}
+
+/* Custom Scrollbar for Premium Feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
 }

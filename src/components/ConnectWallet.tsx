@@ -71,7 +71,7 @@ export default function ConnectWallet({ minimized = false }: ConnectWalletProps)
         <button
           onClick={() => setShowMenu(!showMenu)}
           className={clsx(
-            "group flex items-center bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-500/30 hover:border-green-400 transition-all active:scale-95 relative",
+            "group flex items-center bg-green-500/10 border border-green-500/30 hover:border-green-400 transition-all active:scale-95 relative",
             minimized ? "w-12 h-12 rounded-2xl justify-center" : "w-full p-3 rounded-[28px] gap-3"
           )}
         >
@@ -80,23 +80,23 @@ export default function ConnectWallet({ minimized = false }: ConnectWalletProps)
           </div>
           {!minimized && (
             <div className="flex-1 text-left min-w-0">
-              <p className="text-[10px] font-black truncate text-foreground leading-none mb-1">{user.profile.username}</p>
+              <p className="text-[10px] font-black truncate text-white leading-none mb-1">{user.profile.username}</p>
               <div className="flex items-center gap-1">
                 <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-                <p className="text-[8px] font-black text-green-600 uppercase tracking-widest">Authenticated</p>
+                <p className="text-[8px] font-black text-green-500 uppercase tracking-widest">Authenticated</p>
               </div>
             </div>
           )}
-          {!minimized && <ChevronUp className={clsx("w-3 h-3 text-muted transition-transform", showMenu && "rotate-180")} />}
+          {!minimized && <ChevronUp className={clsx("w-3 h-3 text-slate-500 transition-transform", showMenu && "rotate-180")} />}
         </button>
 
         {/* Expanded Menu */}
         {showMenu && (
-          <div className="absolute bottom-full left-0 mb-4 w-72 bg-white dark:bg-slate-950 border border-border rounded-[40px] shadow-2xl p-6 animate-in slide-in-from-bottom-4 duration-300 z-[100]">
+          <div className="absolute bottom-full left-0 mb-4 w-72 bg-card border border-slate-800 rounded-[40px] shadow-2xl p-6 animate-in slide-in-from-bottom-4 duration-300 z-[100]">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted mb-1">Authenticated User</h4>
-                <p className="text-sm font-black text-foreground">{user.profile.username}</p>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Authenticated User</h4>
+                <p className="text-sm font-black text-white">{user.profile.username}</p>
               </div>
               <button 
                 onClick={() => {
@@ -104,35 +104,35 @@ export default function ConnectWallet({ minimized = false }: ConnectWalletProps)
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-primary"
+                className="p-2 hover:bg-slate-800 rounded-xl transition-all text-primary"
               >
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
 
-            <div className="p-5 bg-slate-50 dark:bg-slate-900 rounded-[32px] mb-6">
+            <div className="p-5 bg-[#0a0c14] rounded-[32px] mb-6 border border-slate-800">
               <div className="flex justify-between items-center mb-1">
-                <p className="text-[9px] font-black uppercase tracking-widest text-muted">Wallet Address</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Wallet Address</p>
                 <Globe className="w-3 h-3 text-primary" />
               </div>
-              <p className="text-sm font-black text-foreground">{truncateAddress(user.walletAddress)}</p>
+              <p className="text-sm font-black text-white">{truncateAddress(user.walletAddress)}</p>
             </div>
 
             <div className="space-y-2 mb-6">
               <button 
                 onClick={() => window.open(`https://explorer.aptoslabs.com/account/${user.walletAddress}?network=mainnet`, "_blank")}
-                className="flex items-center justify-between w-full p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all group"
+                className="flex items-center justify-between w-full p-3.5 hover:bg-slate-800 rounded-2xl transition-all group"
               >
                 <div className="flex items-center gap-3">
-                  <Activity className="w-4 h-4 text-muted group-hover:text-primary transition-colors" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">View Activity</span>
+                  <Activity className="w-4 h-4 text-slate-500 group-hover:text-primary transition-colors" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">View Activity</span>
                 </div>
-                <ExternalLink className="w-3 h-3 text-muted" />
+                <ExternalLink className="w-3 h-3 text-slate-500" />
               </button>
-              <div className="flex items-center justify-between w-full p-3.5 bg-green-500/5 rounded-2xl">
+              <div className="flex items-center justify-between w-full p-3.5 bg-green-500/5 rounded-2xl border border-green-500/10">
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="w-4 h-4 text-green-500" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-green-600">Secure Session</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-green-500">Secure Session</span>
                 </div>
               </div>
             </div>
@@ -143,7 +143,7 @@ export default function ConnectWallet({ minimized = false }: ConnectWalletProps)
                 disconnect();
                 setShowMenu(false);
               }}
-              className="flex items-center justify-center gap-2 w-full py-4 text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-500/5 hover:bg-red-500/10 rounded-2xl transition-all"
+              className="flex items-center justify-center gap-2 w-full py-4 text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-500/5 hover:bg-red-500/10 rounded-2xl transition-all border border-red-500/10"
             >
               <LogOut className="w-4 h-4" />
               Disconnect & Logout
@@ -162,7 +162,7 @@ export default function ConnectWallet({ minimized = false }: ConnectWalletProps)
         <button
           onClick={() => setShowMenu(!showMenu)}
           className={clsx(
-            "group flex items-center bg-slate-50 dark:bg-slate-900 border border-border hover:border-primary/50 transition-all active:scale-95 relative",
+            "group flex items-center bg-slate-900 border border-slate-800 hover:border-primary/50 transition-all active:scale-95 relative",
             minimized ? "w-12 h-12 rounded-2xl justify-center" : "w-full p-3 rounded-[28px] gap-3"
           )}
         >
@@ -171,23 +171,23 @@ export default function ConnectWallet({ minimized = false }: ConnectWalletProps)
           </div>
           {!minimized && (
             <div className="flex-1 text-left min-w-0">
-              <p className="text-[10px] font-black truncate text-foreground leading-none mb-1">{truncateAddress(account.address.toString())}</p>
+              <p className="text-[10px] font-black truncate text-white leading-none mb-1">{truncateAddress(account.address.toString())}</p>
               <div className="flex items-center gap-1">
                 <div className="w-1 h-1 rounded-full bg-yellow-500 animate-pulse" />
-                <p className="text-[8px] font-black text-yellow-600 uppercase tracking-widest">Connected</p>
+                <p className="text-[8px] font-black text-yellow-500 uppercase tracking-widest">Connected</p>
               </div>
             </div>
           )}
-          {!minimized && <ChevronUp className={clsx("w-3 h-3 text-muted transition-transform", showMenu && "rotate-180")} />}
+          {!minimized && <ChevronUp className={clsx("w-3 h-3 text-slate-500 transition-transform", showMenu && "rotate-180")} />}
         </button>
 
         {/* Expanded Menu - Awaiting Authentication */}
         {showMenu && (
-          <div className="absolute bottom-full left-0 mb-4 w-72 bg-white dark:bg-slate-950 border border-border rounded-[40px] shadow-2xl p-6 animate-in slide-in-from-bottom-4 duration-300 z-[100]">
+          <div className="absolute bottom-full left-0 mb-4 w-72 bg-card border border-slate-800 rounded-[40px] shadow-2xl p-6 animate-in slide-in-from-bottom-4 duration-300 z-[100]">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted mb-1">Connected Wallet</h4>
-                <p className="text-sm font-black text-foreground">{truncateAddress(account.address.toString())}</p>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Connected Wallet</h4>
+                <p className="text-sm font-black text-white">{truncateAddress(account.address.toString())}</p>
               </div>
               <button 
                 onClick={() => {
@@ -195,22 +195,22 @@ export default function ConnectWallet({ minimized = false }: ConnectWalletProps)
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-primary"
+                className="p-2 hover:bg-slate-800 rounded-xl transition-all text-primary"
               >
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
 
-            <div className="p-5 bg-slate-50 dark:bg-slate-900 rounded-[32px] mb-6">
+            <div className="p-5 bg-[#0a0c14] rounded-[32px] mb-6 border border-slate-800">
               <div className="flex justify-between items-center mb-1">
-                <p className="text-[9px] font-black uppercase tracking-widest text-muted">Aptos Balance</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Aptos Balance</p>
                 <Globe className="w-3 h-3 text-primary" />
               </div>
-              <p className="text-3xl font-black tracking-tighter text-foreground">{balance} APT</p>
+              <p className="text-3xl font-black tracking-tighter text-white">{balance} APT</p>
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl text-[9px] font-bold text-red-600 dark:text-red-400 mb-4">
+              <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-[9px] font-bold text-red-400 mb-4">
                 <AlertCircle className="w-3 h-3 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -219,13 +219,13 @@ export default function ConnectWallet({ minimized = false }: ConnectWalletProps)
             <div className="space-y-2 mb-6">
               <button 
                 onClick={() => window.open(`https://explorer.aptoslabs.com/account/${account.address}?network=mainnet`, "_blank")}
-                className="flex items-center justify-between w-full p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all group"
+                className="flex items-center justify-between w-full p-3.5 hover:bg-slate-800 rounded-2xl transition-all group"
               >
                 <div className="flex items-center gap-3">
-                  <Activity className="w-4 h-4 text-muted group-hover:text-primary transition-colors" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">View Activity</span>
+                  <Activity className="w-4 h-4 text-slate-500 group-hover:text-primary transition-colors" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">View Activity</span>
                 </div>
-                <ExternalLink className="w-3 h-3 text-muted" />
+                <ExternalLink className="w-3 h-3 text-slate-500" />
               </button>
               <button 
                 onClick={async () => {
@@ -233,7 +233,7 @@ export default function ConnectWallet({ minimized = false }: ConnectWalletProps)
                   setShowMenu(false);
                 }}
                 disabled={isAuthLoading}
-                className="flex items-center justify-center gap-2 w-full py-4 text-[10px] font-black uppercase tracking-widest text-white bg-green-500 hover:bg-green-600 disabled:opacity-50 rounded-2xl transition-all"
+                className="flex items-center justify-center gap-2 w-full py-4 text-[10px] font-black uppercase tracking-widest text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-2xl transition-all shadow-lg shadow-green-500/20"
               >
                 {isAuthLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
                 Authenticate Wallet
@@ -242,7 +242,7 @@ export default function ConnectWallet({ minimized = false }: ConnectWalletProps)
 
             <button
               onClick={() => disconnect()}
-              className="flex items-center justify-center gap-2 w-full py-4 text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-500/5 hover:bg-red-500/10 rounded-2xl transition-all"
+              className="flex items-center justify-center gap-2 w-full py-4 text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-500/5 hover:bg-red-500/10 rounded-2xl transition-all border border-red-500/10"
             >
               <LogOut className="w-4 h-4" />
               Disconnect Wallet
@@ -257,7 +257,7 @@ export default function ConnectWallet({ minimized = false }: ConnectWalletProps)
   return (
     <div className="space-y-3">
       {error && !minimized && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl text-[9px] font-bold text-red-600 dark:text-red-400">
+        <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-[9px] font-bold text-red-400">
           <AlertCircle className="w-3 h-3 shrink-0" />
           <span>{error}</span>
         </div>
@@ -279,4 +279,5 @@ export default function ConnectWallet({ minimized = false }: ConnectWalletProps)
       </button>
     </div>
   );
+
 }

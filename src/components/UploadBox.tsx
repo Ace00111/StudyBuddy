@@ -115,29 +115,29 @@ export default function UploadBox({ onUpload, defaultCategory = "lectures" }: Up
       )}
 
       {/* Category Selector */}
-      <div className="flex items-center gap-3 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl w-fit self-end">
+      <div className="flex items-center gap-3 px-4 py-2 bg-slate-900 rounded-xl w-fit self-end border border-slate-800">
         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Target:</span>
         <select 
           value={category}
           onChange={(e) => setCategory(e.target.value as Material["category"])}
-          className="bg-transparent text-sm font-semibold outline-none border-0 focus:ring-0 cursor-pointer"
+          className="bg-transparent text-sm font-semibold outline-none border-0 focus:ring-0 cursor-pointer text-slate-300"
         >
-          <option value="lectures">Lectures</option>
-          <option value="notes">Study Notes</option>
-          <option value="assignments">Assignments</option>
-          <option value="general">General</option>
+          <option value="lectures" className="bg-slate-900 text-white">Lectures</option>
+          <option value="notes" className="bg-slate-900 text-white">Study Notes</option>
+          <option value="assignments" className="bg-slate-900 text-white">Assignments</option>
+          <option value="general" className="bg-slate-900 text-white">General</option>
         </select>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
+        <div className="flex-1 bg-card border border-slate-800 rounded-xl p-4 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
             <Upload className="w-5 h-5" />
           </div>
           <div className="flex-1 overflow-hidden">
             <input 
               type="file" 
-              className="text-sm w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-slate-800 dark:file:text-slate-300 dark:hover:file:bg-slate-700 cursor-pointer"
+              className="text-sm w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 cursor-pointer"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
           </div>
@@ -150,25 +150,27 @@ export default function UploadBox({ onUpload, defaultCategory = "lectures" }: Up
           </button>
         </div>
 
-        <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500 shrink-0">
+
+        <div className="flex-1 bg-card border border-slate-800 rounded-xl p-4 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
             <LinkIcon className="w-5 h-5" />
           </div>
           <input 
             type="text" 
             placeholder="Paste external link..."
-            className="flex-1 bg-transparent border-0 focus:ring-0 text-sm outline-none placeholder:text-slate-400"
+            className="flex-1 bg-transparent border-0 focus:ring-0 text-sm outline-none placeholder:text-slate-500 text-white"
             value={link}
             onChange={(e) => setLink(e.target.value)}
           />
           <button 
             onClick={handleAddLink}
             disabled={!link || !account}
-            className="px-4 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 disabled:opacity-50 text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-slate-100 text-slate-900 hover:bg-slate-200 disabled:opacity-50 text-sm font-black rounded-lg transition-colors flex items-center gap-2 uppercase tracking-tighter"
           >
             Add Link
           </button>
         </div>
+
       </div>
     </div>
   );

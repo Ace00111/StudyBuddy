@@ -27,14 +27,14 @@ export default function MaterialCard({ material, onClick, isActive }: MaterialCa
       className={cn(
         "cursor-pointer rounded-3xl p-5 border transition-all duration-300 group flex flex-col h-48 relative overflow-hidden",
         isActive 
-          ? "bg-primary border-primary text-white shadow-2xl shadow-blue-500/20" 
-          : "bg-card border-border hover:shadow-xl text-foreground"
+          ? "bg-primary border-primary text-white shadow-2xl shadow-primary/30" 
+          : "bg-card border-slate-800 hover:border-slate-700 text-slate-100"
       )}
     >
       <div className="flex justify-between items-start mb-4">
         <div className={cn(
           "w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transition-all",
-          isActive ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
+          isActive ? "bg-white/20 text-white" : "bg-slate-900 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
         )}>
           {isFile ? <File className="w-6 h-6" /> : <LinkIcon className="w-6 h-6" />}
         </div>
@@ -50,11 +50,12 @@ export default function MaterialCard({ material, onClick, isActive }: MaterialCa
                </button>
                <button 
                  onClick={(e) => { e.stopPropagation(); (window as any).deleteMaterial?.(material.id); }}
-                 className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
+                 className="p-1.5 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
                  title="Delete"
                >
                  <X className="w-4 h-4" />
                </button>
+
              </>
           )}
         </div>
@@ -66,7 +67,7 @@ export default function MaterialCard({ material, onClick, isActive }: MaterialCa
           {material.tags?.map((tag, i) => (
             <span key={i} className={cn(
               "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider",
-              isActive ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+              isActive ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"
             )}>
               {tag}
             </span>

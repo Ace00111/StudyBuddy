@@ -49,7 +49,8 @@ export default function DownloadsView({ materials }: DownloadsViewProps) {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-50 dark:bg-slate-950">
+    <div className="flex-1 flex flex-col h-full bg-background">
+
       <div className="px-4 md:px-8 pt-8 pb-8 max-w-[1200px] mx-auto w-full">
         <div className="mb-8">
           <h1 className="text-4xl font-black tracking-tighter text-foreground">Downloads</h1>
@@ -57,9 +58,9 @@ export default function DownloadsView({ materials }: DownloadsViewProps) {
         </div>
 
         {filesMaterials.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-muted border-2 border-dashed border-border rounded-[40px] bg-white/50 dark:bg-slate-900/50">
-            <FolderIcon className="w-12 h-12 text-slate-200 dark:text-slate-800 mb-4" />
-            <p className="text-lg font-black text-foreground mb-1">No files to download</p>
+          <div className="flex flex-col items-center justify-center py-24 text-slate-500 border-2 border-dashed border-slate-800 rounded-[40px] bg-card/50">
+            <FolderIcon className="w-12 h-12 text-slate-800 mb-4" />
+            <p className="text-lg font-black text-white mb-1">No files to download</p>
             <p className="text-xs text-center px-4 max-w-xs font-medium">Upload files to your Materials library to download them later.</p>
           </div>
         ) : (
@@ -67,15 +68,17 @@ export default function DownloadsView({ materials }: DownloadsViewProps) {
             {filesMaterials.map((material) => (
               <div
                 key={material.id}
-                className="flex items-center justify-between p-5 bg-white dark:bg-slate-900 border border-border rounded-2xl hover:shadow-md transition-all"
+                className="flex items-center justify-between p-5 bg-card border border-slate-800 rounded-2xl hover:bg-slate-900 transition-all"
               >
+
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400">
+                  <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center text-slate-400">
                     <FileIcon className="w-6 h-6" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-foreground truncate">{material.name}</p>
-                    <div className="flex items-center gap-2 mt-1 text-[10px] text-muted">
+                    <p className="font-bold text-white truncate">{material.name}</p>
+                    <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500">
+
                       <span className="uppercase font-black tracking-wider">{material.category}</span>
                       {material.shelbyId && (
                         <>

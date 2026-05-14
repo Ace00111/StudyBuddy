@@ -34,8 +34,7 @@ export async function GET(
         // Download from Shelby Protocol
         const shelbyResult = await downloadFromShelby(
           material.shelbyId,
-          walletAddress,
-          material.txHash
+          walletAddress
         );
 
         await db.logAccess({

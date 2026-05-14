@@ -48,16 +48,17 @@ export default function InfoPane({ materials, notesCount, onClose }: InfoPanePro
     <div 
       onMouseEnter={() => window.dispatchEvent(new Event('reset_infopane_timer'))}
       onMouseLeave={() => window.dispatchEvent(new Event('restart_infopane_timer'))}
-      className="w-80 h-screen border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col relative overflow-hidden animate-in slide-in-from-right duration-500"
+      className="w-80 h-screen border-l border-slate-800 bg-background flex flex-col relative overflow-hidden animate-in slide-in-from-right duration-500"
+
     >
       <div className="p-6 flex items-center justify-between shrink-0">
         <div>
-          <h2 className="font-black text-xl tracking-tighter text-foreground">Library Stats</h2>
+          <h2 className="font-black text-xl tracking-tighter text-white">Library Stats</h2>
           <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em] mt-1">Wallet Verification</p>
         </div>
         <button 
           onClick={onClose}
-          className="text-slate-400 hover:text-foreground p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
+          className="text-slate-400 hover:text-white p-2 hover:bg-slate-800 rounded-xl transition-all"
         >
           <X className="w-4 h-4" />
         </button>
@@ -73,21 +74,21 @@ export default function InfoPane({ materials, notesCount, onClose }: InfoPanePro
               placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-border rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-[#0a0c14] border border-slate-800 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-white"
             />
           </div>
           
           {searchQuery && (
-            <div className="absolute top-full left-0 right-0 mt-2 p-3 bg-white dark:bg-slate-900 border border-border rounded-2xl shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-300 max-h-60 overflow-y-auto custom-scrollbar">
+            <div className="absolute top-full left-0 right-0 mt-2 p-3 bg-[#0a0c14] border border-slate-800 rounded-2xl shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-300 max-h-60 overflow-y-auto custom-scrollbar">
                {filteredItems.length > 0 ? (
                  <div className="space-y-1">
                    <p className="text-[8px] font-black uppercase text-muted tracking-widest mb-2 px-1">Found {filteredItems.length} items</p>
                    {filteredItems.map((item, i) => (
-                     <div key={i} className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer group">
-                        <div className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg group-hover:bg-primary/10 transition-colors">
-                          <FileText className="w-3 h-3 text-muted group-hover:text-primary" />
+                     <div key={i} className="flex items-center gap-3 p-2 hover:bg-slate-800 rounded-xl transition-all cursor-pointer group">
+                        <div className="p-1.5 bg-slate-800 rounded-lg group-hover:bg-primary/10 transition-colors">
+                          <FileText className="w-3 h-3 text-slate-500 group-hover:text-primary" />
                         </div>
-                        <span className="text-[10px] font-black truncate flex-1 text-foreground">{item.name}</span>
+                        <span className="text-[10px] font-black truncate flex-1 text-white">{item.name}</span>
                      </div>
                    ))}
                  </div>
@@ -115,7 +116,7 @@ export default function InfoPane({ materials, notesCount, onClose }: InfoPanePro
 
 
            {/* Quick Stats — per-type breakdown */}
-           <div className="p-5 bg-slate-50 dark:bg-slate-900 border border-border rounded-[32px] space-y-3">
+           <div className="p-5 bg-card border border-slate-800 rounded-[32px] space-y-3">
               <p className="text-[9px] font-black uppercase tracking-widest text-muted mb-3">Quick Stats</p>
               <div className="grid grid-cols-2 gap-2">
                 {[
@@ -126,13 +127,13 @@ export default function InfoPane({ materials, notesCount, onClose }: InfoPanePro
                 ].map((stat) => (
                   <div key={stat.label} className={`p-3 rounded-2xl ${stat.bg} flex flex-col gap-1`}>
                     <span className={`text-xl font-black tracking-tighter ${stat.color}`}>{stat.value}</span>
-                    <span className="text-[8px] font-black uppercase tracking-widest text-muted">{stat.label}</span>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">{stat.label}</span>
                   </div>
                 ))}
               </div>
               <div className="flex items-center justify-between pt-1">
-                <span className="text-[8px] font-black uppercase tracking-widest text-muted">Links saved</span>
-                <span className="text-[10px] font-black text-foreground">{materials.filter(m => m.type === "link").length}</span>
+                <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">Links saved</span>
+                 <span className="text-[10px] font-black text-white">{materials.filter(m => m.type === "link").length}</span>
               </div>
            </div>
         </div>
@@ -196,9 +197,10 @@ function BreakdownItem({ icon, label, count, maxCount, color }: { icon: any, lab
         </div>
         <span className="text-muted">{count} files</span>
       </div>
-      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1 overflow-hidden">
+      <div className="w-full bg-slate-900 rounded-full h-1 overflow-hidden">
         <div className={`${color} h-full rounded-full transition-all duration-700`} style={{ width: `${percentage}%` }}></div>
       </div>
+
     </div>
   );
 }

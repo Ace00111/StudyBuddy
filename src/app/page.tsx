@@ -200,7 +200,8 @@ export default function Home() {
   }, [connected]);
 
   return (
-    <div className="flex h-screen transition-colors duration-300 overflow-hidden text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 relative">
+    <div className="flex h-screen transition-colors duration-300 overflow-hidden text-slate-100 bg-background relative">
+
       
       <div className="relative z-50">
         <Sidebar 
@@ -224,41 +225,42 @@ export default function Home() {
       </div>
 
       <main className="flex-1 flex flex-col h-screen overflow-y-auto relative z-10 custom-scrollbar">
-        <div className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl lg:hidden" aria-label="Open sidebar">
+        <div className="sticky top-0 z-40 bg-background/50 backdrop-blur-xl flex items-center justify-between px-4 md:px-8 py-5 shrink-0">
+          <div className="flex items-center gap-6">
+            <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-slate-500 hover:bg-slate-800 rounded-xl lg:hidden" aria-label="Open sidebar">
               <Menu className="w-6 h-6" />
             </button>
-            <div className="flex items-center gap-3 text-sm text-muted font-medium">
-              <span className="hidden sm:inline hover:text-foreground cursor-pointer font-black tracking-tighter">StudyBuddy</span>
-              <span className="hidden sm:inline">/</span>
-              <span className="text-foreground font-black uppercase tracking-wider text-[9px] bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-border">
+            <div className="flex items-center gap-4 text-xs font-bold">
+              <span className="text-slate-400 font-black tracking-tighter opacity-80">StudyBuddy</span>
+              <span className="text-slate-700 font-light">/</span>
+              <span className="text-slate-100 font-black uppercase tracking-widest text-[9px] bg-slate-800/80 px-4 py-1.5 rounded-full border border-slate-700/50 shadow-inner">
                 {activeTab}
               </span>
             </div>
           </div>
           
           <div className="flex items-center gap-2 md:gap-4">
-            <button onClick={() => setIsInfoPaneOpen(!isInfoPaneOpen)} className={`p-2.5 rounded-xl transition-all border shadow-sm ${isInfoPaneOpen ? "text-primary bg-primary/10 border-primary/20" : "text-foreground bg-white dark:bg-slate-900 border-border hover:bg-slate-100 dark:hover:bg-slate-800"} hidden md:flex`} aria-label="Toggle info pane">
+            <button onClick={() => setIsInfoPaneOpen(!isInfoPaneOpen)} className={`p-2.5 rounded-xl transition-all border ${isInfoPaneOpen ? "text-primary bg-primary/10 border-primary/20" : "text-slate-400 bg-slate-900/50 border-slate-800 hover:bg-slate-800"} hidden md:flex`} aria-label="Toggle info pane">
               <SidebarIcon className="w-5 h-5" />
             </button>
 
-            <div onClick={() => setActiveTab("settings")} className="flex items-center gap-3 pl-2 pr-4 py-1.5 bg-white dark:bg-slate-900 border border-border rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm group">
-               <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-primary/20 overflow-hidden ring-2 ring-white dark:ring-slate-800 group-hover:scale-110 transition-transform">
+            <div onClick={() => setActiveTab("settings")} className="flex items-center gap-3 pl-2 pr-5 py-1.5 bg-slate-900/80 border border-slate-800 rounded-full hover:bg-slate-800 transition-all cursor-pointer group shadow-xl">
+               <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-[10px] font-black shadow-2xl shadow-primary/40 overflow-hidden ring-2 ring-slate-800 group-hover:scale-110 transition-transform">
                   {headerProfile.avatar ? <img src={headerProfile.avatar} className="w-full h-full object-cover" alt="Profile avatar" /> : headerProfile.name.charAt(0)}
                </div>
                <div className="hidden sm:block">
-                  <p className="text-[10px] font-black uppercase tracking-tighter leading-none text-foreground">{headerProfile.name}</p>
-                  <p className="text-[8px] font-bold text-muted mt-0.5 leading-none">Scholar Space</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] leading-none text-white">{headerProfile.name}</p>
+                  <p className="text-[8px] font-bold text-slate-500 mt-1.5 leading-none">Scholar Space</p>
                </div>
             </div>
           </div>
         </div>
 
+
         <div className="flex-1 overflow-y-auto">
           {activeTab === "home" && <div className="animate-in fade-in zoom-in-95 duration-700 h-full"><HomeView materials={materials} notesCount={notes.length} onExplore={() => setActiveTab("materials")} /></div>}
           {activeTab === "materials" && <div className="animate-in fade-in slide-in-from-right-8 duration-700"><MaterialsView materials={materials} onUpload={handleUpload} onDelete={(id) => setMaterials(m => m.filter(x => x.id !== id))} activeMaterial={activeMaterial} setActiveMaterial={setActiveMaterial} selectedCategory={activeCategory} /></div>}
-          {activeTab === "downloads" && <div className="animate-in fade-in slide-in-from-bottom-8 duration-700"><DownloadsView materials={materials} signAndSubmitTransaction={signAndSubmitTransaction} /></div>}
+          {activeTab === "downloads" && <div className="animate-in fade-in slide-in-from-bottom-8 duration-700"><DownloadsView materials={materials} /></div>}
           {activeTab === "settings" && <div className="animate-in fade-in duration-500"><SettingsView /></div>}
           {activeTab === "notes" && <div className="animate-in fade-in slide-in-from-bottom-8 duration-700"><NotesView sharedNotes={notes} setSharedNotes={setNotes} /></div>}
           {activeTab === "notifications" && <div className="animate-in fade-in slide-in-from-left-8 duration-700"><NotificationsView notifications={notifications} setNotifications={setNotifications} /></div>}
@@ -270,10 +272,15 @@ export default function Home() {
       )}
 
       {isInfoPaneOpen && (
-        <div onMouseEnter={() => window.dispatchEvent(new Event('reset_infopane_timer'))} onMouseLeave={() => window.dispatchEvent(new Event('restart_infopane_timer'))} className="fixed inset-y-0 right-0 z-[100] w-80 bg-white dark:bg-slate-950 lg:relative lg:translate-x-0 transition-transform duration-300 shadow-2xl border-l border-border">
+        <div 
+          onMouseEnter={() => window.dispatchEvent(new Event('reset_infopane_timer'))} 
+          onMouseLeave={() => window.dispatchEvent(new Event('restart_infopane_timer'))} 
+          className="fixed inset-y-0 right-0 z-[100] w-80 bg-card lg:relative lg:translate-x-0 transition-transform duration-300 shadow-2xl border-l border-slate-800"
+        >
           <InfoPane materials={materials} notesCount={notes.length} onClose={() => setIsInfoPaneOpen(false)} />
         </div>
       )}
+
     </div>
   );
 }

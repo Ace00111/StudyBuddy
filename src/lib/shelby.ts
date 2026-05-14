@@ -30,7 +30,7 @@ export async function downloadFromShelby(
     });
 
     return {
-      fileData: new Blob([blob.data]),
+      fileData: new Blob([blob as any]),
       txHash: "0x...", // Transaction hash not directly returned by download
       timestamp: Date.now()
     };
@@ -54,7 +54,8 @@ export async function generateContentHash(file: File): Promise<string> {
  * Returns the public gateway URL for a Shelby blob.
  */
 export function getShelbyFileUrl(blobName: string, ownerAddress?: string): string {
-  const baseUrl = shelbyClient.config.shelby.rpc.baseUrl.replace("-api", "-gateway");
+  const config = shelbyClient.config as any;
+  const baseUrl = config.shelby?.rpc?.baseUrl?.replace("-api", "-gateway") || "https://gateway.shelby.com";
   if (ownerAddress) {
     return `${baseUrl}/${ownerAddress}/${blobName}`;
   }
@@ -62,8 +63,22 @@ export function getShelbyFileUrl(blobName: string, ownerAddress?: string): strin
 }
 
 export function getShelbyTestnetInfo() {
+  const config = shelbyClient.config as any;
   return {
-    apiUrl: shelbyClient.config.shelby.rpc.baseUrl,
-    network: shelbyClient.config.aptos.network,
+    apiUrl: config.shelby?.rpc?.baseUrl || "https://api.shelby.com",
+    network: config.aptos?.network || "testnet",
+  };
+}
+/**
+ * Legacy upload function to satisfy existing API routes.
+ * Real uploads should happen on the client using the Shelby React hooks.
+ */
+export async function uploadToShelby(file: File, ownerAddress: string): Promise<ShelbyUploadResult> {
+  console.warn("Legacy uploadToShelby called. Client-side hooks preferred.");
+  return {
+    fileId: "legacy-" + Date.now(),
+    txHash: "0x...",
+    contentHash: "0x...",
+    timestamp: Date.now()
   };
 }

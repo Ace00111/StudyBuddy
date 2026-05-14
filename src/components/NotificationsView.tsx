@@ -58,10 +58,10 @@ export default function NotificationsView({ notifications, setNotifications }: N
 
   const getColor = (type: string) => {
     switch (type) {
-      case "success": return "text-green-500 bg-green-50 dark:bg-green-500/10";
-      case "info": return "text-blue-500 bg-blue-50 dark:bg-blue-500/10";
-      case "security": return "text-purple-500 bg-purple-50 dark:bg-purple-500/10";
-      default: return "text-slate-500 bg-slate-50 dark:bg-slate-500/10";
+      case "success": return "text-green-400 bg-green-500/10";
+      case "info": return "text-blue-400 bg-blue-500/10";
+      case "security": return "text-purple-400 bg-purple-500/10";
+      default: return "text-slate-400 bg-slate-500/10";
     }
   };
 
@@ -137,7 +137,7 @@ export default function NotificationsView({ notifications, setNotifications }: N
           })
         ) : (
           <div className="py-20 text-center">
-            <Bell className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <Bell className="w-12 h-12 text-slate-800 mx-auto mb-4" />
             <p className="text-slate-500">No new notifications</p>
           </div>
         )}

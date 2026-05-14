@@ -6,11 +6,11 @@ import { useState, useEffect } from "react";
 
 function LegendItem({ color, label, value, perc }: { color: string, label: string, value: number, perc: number }) {
   return (
-    <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
+    <div className="flex items-center gap-3 p-3 bg-slate-900/40 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all">
       <div className={`w-2 h-2 rounded-full ${color} shadow-lg shadow-current`} />
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-black text-foreground uppercase tracking-widest">{label}</p>
-        <p className="text-[9px] text-muted font-bold">{value} files • {Math.round(perc)}%</p>
+        <p className="text-[10px] font-black text-slate-100 uppercase tracking-widest">{label}</p>
+        <p className="text-[9px] text-slate-500 font-bold">{value} files • {Math.round(perc)}%</p>
       </div>
     </div>
   );
@@ -67,45 +67,45 @@ export default function HomeView({ materials = [], notesCount = 0, onExplore }: 
   const totalSizeMb = (totalSizeBytes / (1024 * 1024)).toFixed(2);
 
   return (
-    <div className="flex-1 p-4 md:p-8 space-y-10 bg-slate-50 dark:bg-slate-950 min-h-full animate-in fade-in duration-1000">
-      {/* Dark Premium Hero Section */}
-      <div className="relative py-24 px-4 md:px-12 rounded-[50px] bg-[#0a0c14] text-white overflow-hidden text-center flex flex-col items-center justify-center shadow-2xl shadow-blue-900/20 group hover:shadow-primary/30 transition-shadow duration-700">
+    <div className="flex-1 p-4 md:p-8 space-y-10 bg-background min-h-full animate-in fade-in duration-1000">
+      {/* Deep Midnight Hero Section */}
+      <div className="relative py-32 px-4 md:px-12 rounded-[60px] bg-card text-white overflow-hidden text-center flex flex-col items-center justify-center shadow-2xl group transition-all duration-1000">
         <style jsx>{`
           @keyframes float {
             0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-15px); }
             100% { transform: translateY(0px); }
           }
           .animate-float {
-            animation: float 6s ease-in-out infinite;
+            animation: float 8s ease-in-out infinite;
           }
         `}</style>
         
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(79,70,229,0.2),transparent)]" />
-        
-        {/* Middle Decorative Cursor Icon */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none animate-in zoom-in duration-1000">
+        {/* Subtle Decorative Background Elements */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(59,130,246,0.08),transparent)]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.02] pointer-events-none scale-150">
            <MousePointer2 className="w-96 h-96 text-primary rotate-[15deg] animate-pulse" />
         </div>
         
-        <div className="relative z-10 space-y-8 max-w-3xl animate-float">
-           <div className="flex items-center justify-center gap-2 mb-2">
-              <Sparkles className="w-3 h-3 text-blue-400 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-400">Welcome to Study Buddy</span>
+        <div className="relative z-10 space-y-10 max-w-5xl animate-float">
+           <div className="flex items-center justify-center gap-3 mb-2">
+              <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+              <span className="text-[11px] font-black uppercase tracking-[0.6em] text-primary/80">Welcome to Study Buddy</span>
            </div>
            
-           <h1 className="text-4xl md:text-7xl font-black tracking-tighter leading-tight bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent drop-shadow-2xl">
-              Instantly organize your library <br/> with decentralized AI
+           <h1 className="text-5xl md:text-8xl font-medium tracking-tight leading-[0.9] font-serif text-slate-100 drop-shadow-2xl">
+              Instantly organize your <br/> library <br/> 
+              <span className="italic text-slate-400">with decentralized AI</span>
            </h1>
            
            <p className="text-sm md:text-xl opacity-60 font-medium max-w-2xl mx-auto leading-relaxed">
-              Securely upload your study materials to create your personal <br className="hidden md:block"/> knowledge base on Secure Study Storage.
+              Securely upload your study materials to create your personal knowledge base on Secure Study Storage.
            </p>
 
-           <div className="flex justify-center pt-8">
+           <div className="flex justify-center pt-4">
               <button 
                 onClick={onExplore}
-                className="px-12 py-5 bg-primary text-white font-black rounded-full hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-primary/40 flex items-center gap-4 text-base group/btn"
+                className="px-14 py-5 bg-primary text-white font-black rounded-full hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-primary/30 flex items-center gap-4 text-base group/btn"
               >
                  Explore Now
                  <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
@@ -114,9 +114,10 @@ export default function HomeView({ materials = [], notesCount = 0, onExplore }: 
         </div>
       </div>
 
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Storage Chart */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[50px] p-8 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+        <div className="lg:col-span-2 bg-card rounded-[50px] p-8 border border-border shadow-sm relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
           
           <div className="flex justify-between items-start mb-8 relative z-10">
@@ -126,32 +127,34 @@ export default function HomeView({ materials = [], notesCount = 0, onExplore }: 
                  <span className="text-4xl font-black tracking-tighter text-foreground">{totalSizeMb} MB</span>
                  <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Used</span>
                </div>
-             </div>
-             <button className="w-10 h-10 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20">
-               <MoreHorizontal className="w-5 h-5" />
+             </div>             <button className="w-10 h-10 bg-slate-800/50 rounded-xl flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20">
+               <MoreHorizontal className="w-5 h-5 text-slate-400" />
              </button>
           </div>
 
           <div className="flex flex-col xl:flex-row items-center gap-12 relative z-10">
              <div className="relative w-64 h-64 flex items-center justify-center">
-               <div 
-                 className="absolute inset-0 rounded-full shadow-2xl opacity-20 blur-2xl"
-                 style={{ background: `conic-gradient(${gradientParts})` }}
-               />
+                <div 
+                  className="absolute inset-0 rounded-full shadow-[0_0_50px_rgba(59,130,246,0.2)] opacity-30 blur-2xl"
+                  style={{ background: `conic-gradient(${gradientParts})` }}
+                />
+
                <div 
                  className="w-full h-full rounded-full flex items-center justify-center p-8 transition-all duration-1000 group-hover:rotate-6"
                  style={{ background: `conic-gradient(${gradientParts})` }}
                >
-                 <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center shadow-inner relative overflow-hidden">
+                 <div className="w-full h-full rounded-full bg-[#020617] flex items-center justify-center shadow-inner relative overflow-hidden">
                    <div className="text-center z-10">
-                     <p className="text-5xl font-black text-foreground tracking-tighter">{materials.length}</p>
-                     <p className="text-[10px] text-muted font-black uppercase tracking-[0.2em] mt-1">Files</p>
+                     <p className="text-5xl font-black text-white tracking-tighter">{materials.length}</p>
+                     <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-1">Files</p>
                    </div>
                  </div>
                </div>
              </div>
 
-             <div className="flex-1 w-full grid grid-cols-2 gap-3">                <LegendItem color="bg-green-500" label="Notes" value={notesCount} perc={(notesCount/total)*100} />                <LegendItem color="bg-blue-500" label="Notes" value={stats.pdf} perc={(stats.pdf/total)*100} />
+             <div className="flex-1 w-full grid grid-cols-2 gap-3">                <LegendItem color="bg-green-500" label="Notes" value={notesCount} perc={(notesCount/total)*100} />
+                <LegendItem color="bg-blue-500" label="Documents" value={stats.pdf} perc={(stats.pdf/total)*100} />
+
                 <LegendItem color="bg-pink-500" label="Audio" value={stats.lectures} perc={(stats.lectures/total)*100} />
                 <LegendItem color="bg-purple-500" label="Videos" value={stats.video} perc={(stats.video/total)*100} />
                 <LegendItem color="bg-yellow-500" label="Captures" value={stats.images} perc={(stats.images/total)*100} />
@@ -162,21 +165,21 @@ export default function HomeView({ materials = [], notesCount = 0, onExplore }: 
 
         {/* Sidebar Info */}
         <div className="space-y-6">
-          <div className="p-8 rounded-[40px] bg-white dark:bg-slate-900 border border-border shadow-sm">
+          <div className="p-8 rounded-[40px] bg-card border border-slate-800 shadow-sm">
              <div className="flex items-center justify-between mb-6">
-               <h3 className="text-[10px] font-black uppercase tracking-widest text-muted">Recent Activity</h3>
+               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Recent Activity</h3>
                <Sparkles className="w-3 h-3 text-primary animate-pulse" />
              </div>
              <div className="space-y-3">
                 {materials.length > 0 && !privacy.hideActivity ? (
                   materials.slice(-4).reverse().map((m, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all border border-transparent hover:border-border cursor-pointer group/node">
-                       <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center group-hover/node:bg-primary/10 group-hover/node:text-primary transition-all">
-                          <BookOpen className="w-4 h-4" />
+                    <div key={i} className="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-2xl transition-all border border-transparent hover:border-slate-700 cursor-pointer group/node">
+                       <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center group-hover/node:bg-primary/10 group-hover/node:text-primary transition-all">
+                          <BookOpen className="w-4 h-4 text-slate-500 group-hover/node:text-primary" />
                        </div>
                        <div className="flex-1 min-w-0">
-                          <p className={`text-xs font-black truncate text-foreground ${privacy.stealthMode ? 'blur-sm select-none transition-all duration-500' : ''}`}>{m.name}</p>
-                          <p className="text-[9px] font-bold text-muted uppercase tracking-tighter">{m.type} • Added</p>
+                          <p className={`text-xs font-black truncate text-white ${privacy.stealthMode ? 'blur-sm select-none transition-all duration-500' : ''}`}>{m.name}</p>
+                          <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">{m.type} • Added</p>
                        </div>
                     </div>
                   ))

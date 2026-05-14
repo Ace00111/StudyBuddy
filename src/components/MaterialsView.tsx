@@ -43,24 +43,24 @@ export default function MaterialsView({
     .filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-50 dark:bg-slate-950">
+    <div className="flex-1 flex flex-col h-full bg-background">
       <div className="px-4 md:px-8 pb-8 pt-8 max-w-[1600px] mx-auto w-full">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div>
-            <h1 className="text-4xl font-black tracking-tighter capitalize text-foreground">
+            <h1 className="text-4xl font-black tracking-tighter capitalize text-white">
               {selectedCategory === "all" ? "Study Materials" : selectedCategory}
             </h1>
-            <p className="text-sm text-muted font-medium mt-1">Manage and access your decentralized school library.</p>
+            <p className="text-sm text-slate-500 font-medium mt-1">Manage and access your decentralized school library.</p>
           </div>
           
           <div className="relative group">
-            <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-primary transition-colors" />
+            <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors" />
             <input 
               type="text" 
               placeholder="Search library..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-border rounded-2xl text-xs font-bold w-full md:w-72 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
+              className="pl-10 pr-4 py-3 bg-card border border-slate-800 rounded-2xl text-xs font-bold w-full md:w-72 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-white"
             />
           </div>
         </div>
@@ -72,9 +72,9 @@ export default function MaterialsView({
 
         <div className="mt-10">
           {filteredMaterials.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-muted border-2 border-dashed border-border rounded-[40px] bg-white/50 dark:bg-slate-900/50">
-              <FolderIcon className="w-12 h-12 text-slate-200 dark:text-slate-800 mb-4" />
-              <p className="text-lg font-black text-foreground mb-1">Library is empty</p>
+            <div className="flex flex-col items-center justify-center py-24 text-slate-500 border-2 border-dashed border-slate-800 rounded-[40px] bg-card/50">
+              <FolderIcon className="w-12 h-12 text-slate-800 mb-4" />
+              <p className="text-lg font-black text-white mb-1">Library is empty</p>
               <p className="text-xs text-center px-4 max-w-xs font-medium">Upload your first study material to get started with your decentralized library.</p>
             </div>
           ) : (
@@ -92,5 +92,6 @@ export default function MaterialsView({
         </div>
       </div>
     </div>
+
   );
 }
